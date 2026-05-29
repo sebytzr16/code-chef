@@ -8,12 +8,12 @@
     <color name="widget_bg_dark">#F21E1E1E</color>
     <color name="widget_text_primary">#1B1B1B</color>
     <color name="widget_text_secondary">#5F6368</color>
-    <color name="widget_divider">#1F000000</color>
-    <color name="widget_accent">#00696E</color>
+    <color name="widget_divider">#14000000</color>
+    <color name="widget_accent">#1B6B70</color>
 
     <color name="price_up">#2E7D32</color>
     <color name="price_down">#C62828</color>
 
     <!-- Launcher icon -->
-    <color name="ic_launcher_background">#00696E</color>
+    <color name="ic_launcher_background">#1B6B70</color>
 </resources>

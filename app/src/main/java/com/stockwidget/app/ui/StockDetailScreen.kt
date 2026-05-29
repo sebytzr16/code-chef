@@ -143,7 +143,6 @@ fun StockDetailScreen(
                     if (quote.updatedAt > 0L) {
                         StatRow("Last updated", timeText(quote.updatedAt))
                     }
-                    StatRow("Chart points", quote.history.size.toString())
                 }
             }
         }

@@ -9,7 +9,6 @@ import android.widget.RemoteViewsService
 import com.stockwidget.app.R
 import com.stockwidget.app.data.StockRepository
 import com.stockwidget.app.data.model.StockQuote
-import kotlin.math.abs
 
 /** Provides the row views for the widget's ListView. */
 class StockWidgetService : RemoteViewsService() {
@@ -51,8 +50,7 @@ private class StockRemoteViewsFactory(
         if (q.hasData || q.history.isNotEmpty()) {
             views.setTextViewText(R.id.row_price, formatMoney(q.current))
             val arrow = if (up) "▲" else "▼"
-            val change = "$arrow ${formatMoney(abs(q.change))} (${formatPercent(q.changePercent)})"
-            views.setTextViewText(R.id.row_change, change)
+            views.setTextViewText(R.id.row_change, "$arrow ${formatPercent(q.changePercent)}")
             views.setTextColor(R.id.row_change, accent)
 
             views.setTextViewText(

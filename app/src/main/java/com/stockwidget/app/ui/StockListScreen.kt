@@ -1,5 +1,6 @@
 package com.stockwidget.app.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,10 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -21,34 +22,40 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.ui.theme.PriceDown
 import com.stockwidget.app.ui.theme.PriceUp
-import kotlin.math.abs
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +65,7 @@ fun StockListScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     var showAdd by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
@@ -69,14 +77,23 @@ fun StockListScreen(
         }
     }
 
+    fun deleteWithUndo(quote: StockQuote) {
+        viewModel.removeStock(quote.symbol)
+        scope.launch {
+            val result = snackbar.showSnackbar(
+                message = "Removed ${quote.symbol.uppercase()}",
+                actionLabel = "Undo"
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.addStock(quote.symbol, quote.displayName)
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Column {
-                        Text("My Stocks", style = MaterialTheme.typography.headlineSmall)
-                    }
-                },
+                title = { Text("Stocks", fontWeight = FontWeight.SemiBold) },
                 actions = {
                     IconButton(onClick = { viewModel.refresh() }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
@@ -86,17 +103,19 @@ fun StockListScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            FloatingActionButton(
                 onClick = { showAdd = true },
-                icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Add stock") }
-            )
+                elevation = androidx.compose.material3.FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Add stock")
+            }
         },
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbar) }
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
@@ -107,58 +126,91 @@ fun StockListScreen(
                 )
             } else {
                 LazyColumn(
-                    contentPadding = PaddingValues(16.dp, 8.dp, 16.dp, 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    contentPadding = PaddingValues(16.dp, 4.dp, 16.dp, 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(state.quotes, key = { it.symbol }) { quote ->
-                        StockCard(
+                        SwipeableStockRow(
                             quote = quote,
                             onClick = { onOpenDetail(quote.symbol) },
-                            onRemove = { viewModel.removeStock(quote.symbol) }
+                            onDelete = { deleteWithUndo(quote) }
                         )
                     }
                 }
             }
             if (state.isLoading) {
-                CircularProgressIndicator(
-                    Modifier.align(Alignment.TopCenter).padding(top = 8.dp)
-                )
+                LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
             }
         }
     }
 
     if (showAdd) {
-        AddStockDialog(
-            viewModel = viewModel,
-            onDismiss = { showAdd = false }
-        )
+        AddStockDialog(viewModel = viewModel, onDismiss = { showAdd = false })
     }
     if (showSettings) {
-        SettingsDialog(
-            viewModel = viewModel,
-            onDismiss = { showSettings = false }
-        )
+        SettingsDialog(viewModel = viewModel, onDismiss = { showSettings = false })
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StockCard(quote: StockQuote, onClick: () -> Unit, onRemove: () -> Unit) {
+private fun SwipeableStockRow(
+    quote: StockQuote,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                true
+            } else {
+                false
+            }
+        }
+    )
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true,
+        backgroundContent = {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(PriceDown.copy(alpha = 0.12f))
+                    .padding(end = 24.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = PriceDown)
+            }
+        }
+    ) {
+        StockCard(quote = quote, onClick = onClick)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StockCard(quote: StockQuote, onClick: () -> Unit) {
     val up = quote.isUp
     val accent = if (up) PriceUp else PriceDown
+    val hasData = quote.hasData || quote.history.isNotEmpty()
+
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: symbol + name + open/prev close.
+            // Symbol + name
             Column(Modifier.weight(1f)) {
                 Text(
                     quote.symbol.uppercase(),
@@ -172,33 +224,19 @@ private fun StockCard(quote: StockQuote, onClick: () -> Unit, onRemove: () -> Un
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(6.dp))
-                if (quote.hasData || quote.history.isNotEmpty()) {
-                    Text(
-                        "Open ${money(quote.open)}  ·  Prev ${money(quote.previousClose)}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    Text(
-                        quote.error ?: "Loading…",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
 
-            // Middle: price + change.
-            Column(horizontalAlignment = Alignment.End) {
+            // Price + percent change
+            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 14.dp)) {
                 Text(
-                    if (quote.hasData || quote.history.isNotEmpty()) money(quote.current) else "—",
+                    if (hasData) money(quote.current) else "—",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                if (quote.hasData || quote.history.isNotEmpty()) {
+                if (hasData) {
                     val arrow = if (up) "▲" else "▼"
                     Text(
-                        "$arrow ${money(abs(quote.change))} (${percent(quote.changePercent)})",
+                        "$arrow ${percent(quote.changePercent)}",
                         style = MaterialTheme.typography.labelMedium,
                         color = accent,
                         fontWeight = FontWeight.Medium
@@ -206,21 +244,11 @@ private fun StockCard(quote: StockQuote, onClick: () -> Unit, onRemove: () -> Un
                 }
             }
 
-            Spacer(Modifier.width(12.dp))
-
-            // Right: chart.
+            // Chart, on the right of the price
             Sparkline(
                 quote = quote,
-                modifier = Modifier.width(84.dp).height(48.dp)
+                modifier = Modifier.width(72.dp).height(40.dp)
             )
-
-            IconButton(onClick = onRemove) {
-                Icon(
-                    Icons.Filled.Delete,
-                    contentDescription = "Remove",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
@@ -228,22 +256,24 @@ private fun StockCard(quote: StockQuote, onClick: () -> Unit, onRemove: () -> Un
 @Composable
 private fun EmptyState(hasKey: Boolean, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.padding(32.dp),
+        modifier = modifier.padding(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            if (hasKey) "No stocks yet" else "Welcome 👋",
-            style = MaterialTheme.typography.headlineSmall
+            if (hasKey) "No stocks yet" else "Welcome",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(10.dp))
         Text(
             if (hasKey) {
-                "Tap \"Add stock\" to start tracking, then add the widget to your home screen."
+                "Tap + to add a stock, then drop the widget on your home screen."
             } else {
-                "Open Settings to paste your free Finnhub API key, then add the stocks you own."
+                "Open Settings to add your free Finnhub API key, then start adding stocks."
             },
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
     }
 }

@@ -89,7 +89,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 val arrow = if (up) "▲" else "▼"
                 views.setTextViewText(
                     R.id.single_change,
-                    "$arrow ${money(abs(quote.change))} (${percent(quote.changePercent)})"
+                    "$arrow ${money(abs(quote.change))}  ${percent(quote.changePercent)}"
                 )
                 views.setTextColor(R.id.single_change, accent)
                 views.setTextViewText(

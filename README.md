@@ -9,7 +9,7 @@ it's below.**
 |---|---|
 | **Language** | Kotlin |
 | **UI** | Jetpack Compose + Material 3 (dynamic color on Android 12+) |
-| **Widget** | `AppWidgetProvider` + `RemoteViews` collection list, chart rendered to a `Bitmap` |
+| **Widgets** | A multi-stock list widget **and** a compact single-stock widget (pick the stock when you place it). Charts rendered to a `Bitmap` |
 | **Data** | [Finnhub](https://finnhub.io) `/quote` endpoint (free tier) |
 | **Refresh** | `WorkManager` periodic refresh + a refresh button on the widget |
 | **Min SDK** | 26 (Android 8.0) · **Target SDK** 35 |
@@ -21,8 +21,12 @@ it's below.**
 2. Open the project in **Android Studio** (Ladybug or newer) and let Gradle sync.
 3. Run the app on a device/emulator.
 4. In the app, open **Settings** (gear icon) and paste your API key.
-5. Tap **Add stock**, search or type a ticker (e.g. `AAPL`, `MSFT`, `TSLA`), and add it.
-6. **Long-press your home screen → Widgets → Stock Widget** and drop it on the home screen.
+5. Tap **Add stock**, search by name/ticker (search needs the API key) or type a ticker
+   (e.g. `AAPL`, `MSFT`, `TSLA`), and add it.
+6. Tap any stock to open a **detail screen** with open / previous close / day high / low /
+   change — all served instantly from the last refresh, **no network needed to open it**.
+7. **Long-press your home screen → Widgets → Stock Widget** and choose either the **list
+   widget** or the **single-stock widget** (the latter asks which stock to show).
 
 ## How the chart works
 

@@ -92,5 +92,8 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value.copy(message = null)
     }
 
+    /** Cached quote for the detail screen — no network, instantly available. */
+    fun cachedQuote(symbol: String): StockQuote? = repository.cachedQuote(symbol)
+
     suspend fun search(query: String): List<SymbolMatch> = repository.searchSymbols(query)
 }

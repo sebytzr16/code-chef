@@ -51,3 +51,16 @@ data class StockData(
     val stocks: List<Stock> = emptyList(),
     val history: Map<String, List<PricePoint>> = emptyMap()
 )
+
+/**
+ * A persisted snapshot of the last successful quote for a symbol. Saved on every refresh
+ * so the app and widgets can render full data instantly, offline, without re-fetching.
+ */
+data class QuoteSnapshot(
+    val current: Float = 0f,
+    val open: Float = 0f,
+    val previousClose: Float = 0f,
+    val high: Float = 0f,
+    val low: Float = 0f,
+    val updatedAt: Long = 0L
+)

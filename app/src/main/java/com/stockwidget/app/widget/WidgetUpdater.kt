@@ -12,13 +12,17 @@ import kotlinx.coroutines.launch
 /** Helpers for refreshing widget data and telling the launcher to redraw. */
 object WidgetUpdater {
 
-    /** Notify all widget instances that their list data changed (forces re-render). */
+    /** Notify all widget instances that their data changed (forces re-render). */
     fun notifyDataChanged(context: Context) {
         val manager = AppWidgetManager.getInstance(context)
         val ids = widgetIds(context, manager)
-        manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_list)
-        // Also rebuild the chrome (header / timestamp).
-        StockWidgetProvider.refreshChrome(context, manager, ids)
+        if (ids.isNotEmpty()) {
+            manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_list)
+            // Also rebuild the chrome (header / timestamp).
+            StockWidgetProvider.refreshChrome(context, manager, ids)
+        }
+        // Single-stock widgets are static layouts; redraw them directly.
+        SingleStockWidgetProvider.renderAll(context)
     }
 
     /** Fetch fresh quotes off the main thread, then redraw. */

@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.stockwidget.app.data.model.PricePoint
+import com.stockwidget.app.data.model.QuoteSnapshot
 import com.stockwidget.app.data.model.Stock
 
 /**
@@ -49,10 +50,13 @@ class PreferencesStore(context: Context) {
 
     fun removeStock(symbol: String) {
         saveStocks(getStocks().filterNot { it.symbol.equals(symbol, ignoreCase = true) })
-        // Drop history for the removed symbol too.
+        // Drop history and snapshot for the removed symbol too.
         val map = getHistoryMap().toMutableMap()
         map.remove(symbol.uppercase())
         saveHistoryMap(map)
+        val snaps = getSnapshotMap().toMutableMap()
+        snaps.remove(symbol.uppercase())
+        saveSnapshotMap(snaps)
     }
 
     fun moveStock(from: Int, to: Int) {
@@ -100,11 +104,63 @@ class PreferencesStore(context: Context) {
         return (a + LOCAL_OFFSET_MS) / dayMs == (b + LOCAL_OFFSET_MS) / dayMs
     }
 
+    // ---- Quote snapshots (full last-known data, for instant offline render) -
+
+    private fun getSnapshotMap(): Map<String, QuoteSnapshot> {
+        val json = prefs.getString(KEY_SNAPSHOTS, null) ?: return emptyMap()
+        return runCatching {
+            val type = object : TypeToken<Map<String, QuoteSnapshot>>() {}.type
+            gson.fromJson<Map<String, QuoteSnapshot>>(json, type) ?: emptyMap()
+        }.getOrDefault(emptyMap())
+    }
+
+    private fun saveSnapshotMap(map: Map<String, QuoteSnapshot>) {
+        prefs.edit().putString(KEY_SNAPSHOTS, gson.toJson(map)).apply()
+    }
+
+    fun getSnapshot(symbol: String): QuoteSnapshot? = getSnapshotMap()[symbol.uppercase()]
+
+    fun saveSnapshot(symbol: String, snapshot: QuoteSnapshot) {
+        val map = getSnapshotMap().toMutableMap()
+        map[symbol.uppercase()] = snapshot
+        saveSnapshotMap(map)
+    }
+
+    // ---- Single-stock widget: which symbol each widget instance shows -------
+
+    private fun getWidgetSymbolMap(): Map<String, String> {
+        val json = prefs.getString(KEY_WIDGET_SYMBOLS, null) ?: return emptyMap()
+        return runCatching {
+            val type = object : TypeToken<Map<String, String>>() {}.type
+            gson.fromJson<Map<String, String>>(json, type) ?: emptyMap()
+        }.getOrDefault(emptyMap())
+    }
+
+    private fun saveWidgetSymbolMap(map: Map<String, String>) {
+        prefs.edit().putString(KEY_WIDGET_SYMBOLS, gson.toJson(map)).apply()
+    }
+
+    fun getWidgetSymbol(widgetId: Int): String? = getWidgetSymbolMap()[widgetId.toString()]
+
+    fun setWidgetSymbol(widgetId: Int, symbol: String) {
+        val map = getWidgetSymbolMap().toMutableMap()
+        map[widgetId.toString()] = symbol.uppercase()
+        saveWidgetSymbolMap(map)
+    }
+
+    fun removeWidgetSymbol(widgetId: Int) {
+        val map = getWidgetSymbolMap().toMutableMap()
+        map.remove(widgetId.toString())
+        saveWidgetSymbolMap(map)
+    }
+
     companion object {
         private const val PREFS_NAME = "stock_widget_prefs"
         private const val KEY_API = "api_key"
         private const val KEY_STOCKS = "stocks"
         private const val KEY_HISTORY = "history"
+        private const val KEY_SNAPSHOTS = "snapshots"
+        private const val KEY_WIDGET_SYMBOLS = "widget_symbols"
         private const val KEY_REFRESH = "refresh_minutes"
         private const val DEFAULT_REFRESH_MIN = 30
         private const val MAX_POINTS = 120

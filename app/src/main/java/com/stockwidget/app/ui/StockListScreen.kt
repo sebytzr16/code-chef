@@ -52,7 +52,10 @@ import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StockListScreen(viewModel: StockViewModel) {
+fun StockListScreen(
+    viewModel: StockViewModel,
+    onOpenDetail: (String) -> Unit = {}
+) {
     val state by viewModel.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
 
@@ -110,6 +113,7 @@ fun StockListScreen(viewModel: StockViewModel) {
                     items(state.quotes, key = { it.symbol }) { quote ->
                         StockCard(
                             quote = quote,
+                            onClick = { onOpenDetail(quote.symbol) },
                             onRemove = { viewModel.removeStock(quote.symbol) }
                         )
                     }
@@ -137,11 +141,13 @@ fun StockListScreen(viewModel: StockViewModel) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StockCard(quote: StockQuote, onRemove: () -> Unit) {
+private fun StockCard(quote: StockQuote, onClick: () -> Unit, onRemove: () -> Unit) {
     val up = quote.isUp
     val accent = if (up) PriceUp else PriceDown
     Card(
+        onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         colors = CardDefaults.cardColors(

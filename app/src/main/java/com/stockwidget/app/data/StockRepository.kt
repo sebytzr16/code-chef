@@ -2,6 +2,8 @@ package com.stockwidget.app.data
 
 import android.content.Context
 import com.stockwidget.app.data.model.PricePoint
+import com.stockwidget.app.data.model.QuoteSnapshot
+import com.stockwidget.app.data.model.Stock
 import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.data.remote.FinnhubApi
 import com.stockwidget.app.data.remote.FinnhubClient
@@ -48,6 +50,18 @@ class StockRepository(
                 } else {
                     val now = System.currentTimeMillis()
                     store.appendPricePoint(stock.symbol, PricePoint(now, quote.current))
+                    // Persist the full snapshot so the app/widgets render instantly offline.
+                    store.saveSnapshot(
+                        stock.symbol,
+                        QuoteSnapshot(
+                            current = quote.current,
+                            open = quote.open,
+                            previousClose = quote.previousClose,
+                            high = quote.high,
+                            low = quote.low,
+                            updatedAt = now
+                        )
+                    )
                     StockQuote(
                         symbol = stock.symbol,
                         displayName = stock.displayName,
@@ -71,16 +85,26 @@ class StockRepository(
         }
     }
 
-    /** Builds quotes from cached history only (no network). Used to render instantly. */
-    fun cachedQuotes(): List<StockQuote> = store.getStocks().map { stock ->
+    /** Builds quotes from the cached snapshot + history (no network). Renders instantly. */
+    fun cachedQuotes(): List<StockQuote> = store.getStocks().map { buildCached(it) }
+
+    /** Cached quote for a single symbol, or null if it isn't tracked. */
+    fun cachedQuote(symbol: String): StockQuote? =
+        store.getStocks().firstOrNull { it.symbol.equals(symbol, ignoreCase = true) }
+            ?.let { buildCached(it) }
+
+    private fun buildCached(stock: Stock): StockQuote {
         val history = store.getHistory(stock.symbol)
-        val last = history.lastOrNull()
-        StockQuote(
+        val snap = store.getSnapshot(stock.symbol)
+        return StockQuote(
             symbol = stock.symbol,
             displayName = stock.displayName,
-            current = last?.price ?: 0f,
-            open = history.firstOrNull()?.price ?: 0f,
-            updatedAt = last?.timestamp ?: 0L,
+            current = snap?.current ?: history.lastOrNull()?.price ?: 0f,
+            open = snap?.open ?: history.firstOrNull()?.price ?: 0f,
+            previousClose = snap?.previousClose ?: 0f,
+            high = snap?.high ?: 0f,
+            low = snap?.low ?: 0f,
+            updatedAt = snap?.updatedAt ?: history.lastOrNull()?.timestamp ?: 0L,
             history = history
         )
     }

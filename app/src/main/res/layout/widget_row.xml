@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/row_root"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <!-- Left: symbol, name, open/prev -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/row_symbol"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AAPL"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/row_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="Apple Inc"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/row_openclose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:text="Open $0.00 · Prev $0.00"
+            android:textColor="@color/widget_text_secondary"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Middle: price + change -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:paddingStart="6dp"
+        android:paddingEnd="8dp">
+
+        <TextView
+            android:id="@+id/row_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="$0.00"
+            android:textColor="@color/widget_text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/row_change"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="▲ $0.00 (0.00%)"
+            android:textColor="@color/price_up"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Right: chart -->
+    <ImageView
+        android:id="@+id/row_chart"
+        android:layout_width="72dp"
+        android:layout_height="40dp"
+        android:contentDescription="@null"
+        android:scaleType="fitXY" />
+
+</LinearLayout>

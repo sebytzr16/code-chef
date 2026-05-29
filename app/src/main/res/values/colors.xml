@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Widget palette -->
+    <color name="widget_bg">#F2FFFFFF</color>
+    <color name="widget_bg_dark">#F21E1E1E</color>
+    <color name="widget_text_primary">#1B1B1B</color>
+    <color name="widget_text_secondary">#5F6368</color>
+    <color name="widget_divider">#1F000000</color>
+    <color name="widget_accent">#00696E</color>
+
+    <color name="price_up">#2E7D32</color>
+    <color name="price_down">#C62828</color>
+
+    <!-- Launcher icon -->
+    <color name="ic_launcher_background">#00696E</color>
+</resources>

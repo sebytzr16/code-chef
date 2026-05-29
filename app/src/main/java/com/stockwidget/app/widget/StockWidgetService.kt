@@ -2,7 +2,6 @@ package com.stockwidget.app.widget
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
@@ -41,18 +40,10 @@ private class StockRemoteViewsFactory(
         if (position !in quotes.indices) return views
         val q = quotes[position]
 
-        val up = q.isUp
-        val accent = if (up) ChartBitmap.GREEN else ChartBitmap.RED
-
         views.setTextViewText(R.id.row_symbol, q.symbol.uppercase())
-        views.setTextViewText(R.id.row_name, q.displayName)
 
         if (q.hasData || q.history.isNotEmpty()) {
             views.setTextViewText(R.id.row_price, formatMoney(q.current))
-            val arrow = if (up) "▲" else "▼"
-            views.setTextViewText(R.id.row_change, "$arrow ${formatPercent(q.changePercent)}")
-            views.setTextColor(R.id.row_change, accent)
-
             views.setTextViewText(
                 R.id.row_openclose,
                 context.getString(
@@ -61,15 +52,12 @@ private class StockRemoteViewsFactory(
                     formatMoney(q.previousClose)
                 )
             )
-
             views.setImageViewBitmap(R.id.row_chart, ChartBitmap.render(q))
             views.setViewVisibility(R.id.row_chart, View.VISIBLE)
         } else {
             // No data yet (e.g. error or never fetched).
             views.setTextViewText(R.id.row_price, "—")
-            views.setTextViewText(R.id.row_change, q.error ?: "—")
-            views.setTextColor(R.id.row_change, Color.GRAY)
-            views.setTextViewText(R.id.row_openclose, "")
+            views.setTextViewText(R.id.row_openclose, q.error ?: "")
             views.setViewVisibility(R.id.row_chart, View.INVISIBLE)
         }
 
@@ -86,5 +74,4 @@ private class StockRemoteViewsFactory(
     override fun hasStableIds(): Boolean = true
 
     private fun formatMoney(value: Float): String = "$" + String.format("%,.2f", value)
-    private fun formatPercent(value: Float): String = String.format("%+.2f%%", value)
 }

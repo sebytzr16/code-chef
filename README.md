@@ -9,7 +9,7 @@ it's below.**
 |---|---|
 | **Language** | Kotlin |
 | **UI** | Jetpack Compose + Material 3 (dynamic color on Android 12+) |
-| **Widgets** | A multi-stock list widget **and** a compact single-stock widget (pick the stock when you place it). Charts rendered to a `Bitmap` |
+| **Widgets** | A multi-stock list widget **and** a compact single-stock widget (pick the stock when you place it). Dark-grey background; each entry shows the name + price (big), open/close (small), and a green/red line chart on the side. Charts rendered to a `Bitmap` |
 | **Data** | [Finnhub](https://finnhub.io) `/quote` endpoint (free tier) |
 | **Refresh** | `WorkManager` periodic refresh + a refresh button on the widget |
 | **Min SDK** | 26 (Android 8.0) · **Target SDK** 35 |

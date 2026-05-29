@@ -17,11 +17,11 @@ import com.stockwidget.app.data.model.StockQuote
  */
 object ChartBitmap {
 
-    val GREEN = 0xFF2E7D32.toInt()
-    val GREEN_FILL = 0x332E7D32
-    val RED = 0xFFC62828.toInt()
-    val RED_FILL = 0x33C62828
-    private const val BASELINE = 0x33888888
+    val GREEN = 0xFF4CAF50.toInt()
+    val GREEN_FILL = 0x334CAF50
+    val RED = 0xFFEF5350.toInt()
+    val RED_FILL = 0x33EF5350
+    private const val BASELINE = 0x40FFFFFF
 
     fun render(quote: StockQuote, widthDp: Int = 72, heightDp: Int = 40): Bitmap {
         val w = dp(widthDp)

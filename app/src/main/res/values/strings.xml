@@ -15,5 +15,5 @@
     <string name="refresh">Refresh</string>
 
     <!-- Row -->
-    <string name="row_open_prevclose">Open %1$s · Prev %2$s</string>
+    <string name="row_open_prevclose">Open %1$s   ·   Close %2$s</string>
 </resources>

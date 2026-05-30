@@ -8,6 +8,7 @@ import com.stockwidget.app.data.model.Stock
 import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.data.remote.YahooApi
 import com.stockwidget.app.data.remote.YahooClient
+import com.stockwidget.app.util.Exchanges
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -34,12 +35,15 @@ class StockRepository(
                 val result = response.chart.result?.firstOrNull()
                 val price = result?.meta?.regularMarketPrice
                 if (result == null || price == null) {
+                    val snap = store.getSnapshot(stock.symbol)
                     StockQuote(
                         symbol = stock.symbol,
                         displayName = stock.displayName,
                         error = response.chart.error?.description ?: "No data",
                         history = store.getHistory(stock.symbol),
-                        pinned = stock.pinned
+                        pinned = stock.pinned,
+                        currency = snap?.currency.orEmpty(),
+                        exchange = snap?.exchange.orEmpty()
                     )
                 } else {
                     val meta = result.meta
@@ -55,11 +59,13 @@ class StockRepository(
                         ?: series?.low?.filterNotNull()?.minOrNull() ?: 0f
                     val updatedAt = meta.regularMarketTime?.let { it * 1000 }
                         ?: System.currentTimeMillis()
+                    val currency = meta.currency?.takeIf { it.isNotBlank() } ?: "USD"
+                    val exchange = Exchanges.friendly(meta.exchangeName, meta.fullExchangeName)
 
                     store.saveHistory(stock.symbol, points)
                     store.saveSnapshot(
                         stock.symbol,
-                        QuoteSnapshot(price, open, previousClose, high, low, updatedAt)
+                        QuoteSnapshot(price, open, previousClose, high, low, updatedAt, currency, exchange)
                     )
 
                     StockQuote(
@@ -72,16 +78,21 @@ class StockRepository(
                         low = low,
                         updatedAt = updatedAt,
                         history = points,
-                        pinned = stock.pinned
+                        pinned = stock.pinned,
+                        currency = currency,
+                        exchange = exchange
                     )
                 }
             } catch (e: Exception) {
+                val snap = store.getSnapshot(stock.symbol)
                 StockQuote(
                     symbol = stock.symbol,
                     displayName = stock.displayName,
                     error = e.message ?: "Network error",
                     history = store.getHistory(stock.symbol),
-                    pinned = stock.pinned
+                    pinned = stock.pinned,
+                    currency = snap?.currency.orEmpty(),
+                    exchange = snap?.exchange.orEmpty()
                 )
             }
         }
@@ -116,7 +127,9 @@ class StockRepository(
             low = snap?.low ?: 0f,
             updatedAt = snap?.updatedAt ?: history.lastOrNull()?.timestamp ?: 0L,
             history = history,
-            pinned = stock.pinned
+            pinned = stock.pinned,
+            currency = snap?.currency.orEmpty(),
+            exchange = snap?.exchange.orEmpty()
         )
     }
 

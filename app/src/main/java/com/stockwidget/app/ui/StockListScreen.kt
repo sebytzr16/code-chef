@@ -64,6 +64,7 @@ import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.data.model.ThemeMode
 import com.stockwidget.app.ui.theme.PriceDown
 import com.stockwidget.app.ui.theme.PriceUp
+import com.stockwidget.app.util.Money
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -368,7 +369,7 @@ private fun StockCard(
                     )
                 }
                 Text(
-                    quote.displayName,
+                    subtitle(quote),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -389,11 +390,21 @@ private fun StockCard(
                     horizontalAlignment = Alignment.End,
                     modifier = Modifier.padding(end = 14.dp)
                 ) {
-                    Text(
-                        if (hasData) money(quote.current) else "—",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            if (hasData) Money.format(quote.current, quote.currency) else "—",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (hasData && quote.currency.isNotBlank()) {
+                            Text(
+                                quote.currency.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 3.dp, bottom = 1.dp)
+                            )
+                        }
+                    }
                     if (hasData) {
                         val arrow = if (up) "▲" else "▼"
                         Text(
@@ -468,5 +479,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
     }
 }
 
-private fun money(v: Float): String = "$" + String.format("%,.2f", v)
+private fun subtitle(quote: StockQuote): String =
+    if (quote.exchange.isNotBlank()) "${quote.displayName} · ${quote.exchange}" else quote.displayName
+
 private fun percent(v: Float): String = String.format("%+.2f%%", v)

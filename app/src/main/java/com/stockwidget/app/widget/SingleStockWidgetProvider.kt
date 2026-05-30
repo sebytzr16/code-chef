@@ -12,6 +12,7 @@ import com.stockwidget.app.MainActivity
 import com.stockwidget.app.R
 import com.stockwidget.app.data.PreferencesStore
 import com.stockwidget.app.data.StockRepository
+import com.stockwidget.app.util.Money
 
 /**
  * A compact widget that shows a single stock chosen at placement time (via
@@ -77,13 +78,19 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.single_symbol, quote.displaySymbol)
 
             if (hasData) {
-                views.setTextViewText(R.id.single_price, money(quote.current))
+                views.setTextViewText(R.id.single_price, Money.format(quote.current, quote.currency))
+                if (quote.currency.isNotBlank()) {
+                    views.setTextViewText(R.id.single_currency, quote.currency.uppercase())
+                    views.setViewVisibility(R.id.single_currency, View.VISIBLE)
+                } else {
+                    views.setViewVisibility(R.id.single_currency, View.GONE)
+                }
                 views.setTextViewText(
                     R.id.single_openclose,
                     context.getString(
                         R.string.row_open_prevclose_short,
-                        money(quote.open),
-                        money(quote.previousClose)
+                        Money.format(quote.open, quote.currency),
+                        Money.format(quote.previousClose, quote.currency)
                     )
                 )
                 views.setImageViewBitmap(
@@ -93,6 +100,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 views.setViewVisibility(R.id.single_chart, View.VISIBLE)
             } else {
                 views.setTextViewText(R.id.single_price, "—")
+                views.setViewVisibility(R.id.single_currency, View.GONE)
                 views.setTextViewText(R.id.single_openclose, quote.error ?: "")
                 views.setViewVisibility(R.id.single_chart, View.INVISIBLE)
             }
@@ -125,6 +133,5 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
             )
         }
 
-        private fun money(v: Float): String = "$" + String.format("%,.2f", v)
     }
 }

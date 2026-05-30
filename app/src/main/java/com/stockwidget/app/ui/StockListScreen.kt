@@ -1,6 +1,5 @@
 package com.stockwidget.app.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,12 +20,15 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,13 +37,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,7 +50,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -75,6 +73,11 @@ fun StockListScreen(
     var results by remember { mutableStateOf<List<SearchResult>>(emptyList()) }
     var searching by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<StockQuote?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    var editMode by remember { mutableStateOf(false) }
+
+    // Editing/searching can't coexist meaningfully; searching exits edit mode.
+    val inSearch = query.isNotBlank()
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -102,8 +105,44 @@ fun StockListScreen(
             TopAppBar(
                 title = { Text("Stocks", fontWeight = FontWeight.SemiBold) },
                 actions = {
-                    IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
+                    if (editMode) {
+                        TextButton(onClick = { editMode = false }) { Text("Done") }
+                    } else {
+                        IconButton(onClick = { menuOpen = true }) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
+                        }
+                        DropdownMenu(
+                            expanded = menuOpen,
+                            onDismissRequest = { menuOpen = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Refresh now") },
+                                onClick = { menuOpen = false; viewModel.refresh() }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Edit stocks") },
+                                onClick = { menuOpen = false; editMode = true }
+                            )
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text("Update every 30 min") },
+                                trailingIcon = {
+                                    if (state.refreshMinutes == 30) {
+                                        Icon(Icons.Filled.Check, contentDescription = null)
+                                    }
+                                },
+                                onClick = { menuOpen = false; viewModel.setRefreshMinutes(30) }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Update every hour") },
+                                trailingIcon = {
+                                    if (state.refreshMinutes == 60) {
+                                        Icon(Icons.Filled.Check, contentDescription = null)
+                                    }
+                                },
+                                onClick = { menuOpen = false; viewModel.setRefreshMinutes(60) }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -136,7 +175,7 @@ fun StockListScreen(
             )
 
             Box(Modifier.fillMaxWidth().weight(1f)) {
-                if (query.isNotBlank()) {
+                if (inSearch) {
                     SearchResults(
                         results = results,
                         searching = searching,
@@ -154,16 +193,17 @@ fun StockListScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(state.quotes, key = { it.symbol }) { quote ->
-                            SwipeableStockRow(
+                            StockCard(
                                 quote = quote,
+                                editMode = editMode,
                                 onClick = { onOpenDetail(quote.symbol) },
-                                onRequestDelete = { pendingDelete = quote }
+                                onDelete = { pendingDelete = quote }
                             )
                         }
                     }
                 }
 
-                if (state.isLoading && query.isBlank()) {
+                if (state.isLoading && !inSearch) {
                     LinearProgressIndicator(Modifier.fillMaxWidth().align(Alignment.TopCenter))
                 }
             }
@@ -250,57 +290,24 @@ private fun SearchResults(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SwipeableStockRow(
+private fun StockCard(
     quote: StockQuote,
+    editMode: Boolean,
     onClick: () -> Unit,
-    onRequestDelete: () -> Unit
+    onDelete: () -> Unit
 ) {
-    // Swiping asks for confirmation rather than deleting outright. We always return
-    // false so the row springs back; the dialog handles the actual removal.
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            if (value == SwipeToDismissBoxValue.EndToStart) {
-                onRequestDelete()
-            }
-            false
-        }
-    )
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = false,
-        enableDismissFromEndToStart = true,
-        backgroundContent = {
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(PriceDown.copy(alpha = 0.12f))
-                    .padding(end = 24.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = PriceDown)
-            }
-        }
-    ) {
-        StockCard(quote = quote, onClick = onClick)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun StockCard(quote: StockQuote, onClick: () -> Unit) {
     val up = quote.isUp
     val accent = if (up) PriceUp else PriceDown
     val hasData = quote.hasData || quote.history.isNotEmpty()
+    // Card tints green when up, light red when down.
+    val container = if (up) PriceUp.copy(alpha = 0.15f) else PriceDown.copy(alpha = 0.15f)
 
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-        )
+        colors = CardDefaults.cardColors(containerColor = container)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
@@ -342,6 +349,12 @@ private fun StockCard(quote: StockQuote, onClick: () -> Unit) {
                 quote = quote,
                 modifier = Modifier.width(72.dp).height(40.dp)
             )
+
+            if (editMode) {
+                IconButton(onClick = onDelete, modifier = Modifier.padding(start = 4.dp)) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = PriceDown)
+                }
+            }
         }
     }
 }

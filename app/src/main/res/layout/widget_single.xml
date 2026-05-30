@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="16dp">
+    android:padding="10dp">
 
     <!-- Data content -->
     <LinearLayout
@@ -26,18 +26,21 @@
                 android:id="@+id/single_symbol"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
                 android:text="AAPL"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="20sp"
+                android:textSize="13sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/single_price"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:maxLines="1"
                 android:text="$0.00"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="28sp"
+                android:textSize="17sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -45,18 +48,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:maxLines="1"
-                android:paddingTop="4dp"
-                android:text="Open $0.00 · Close $0.00"
+                android:ellipsize="end"
+                android:text="O $0.00 · C $0.00"
                 android:textColor="@color/widget_text_secondary"
-                android:textSize="12sp" />
+                android:textSize="9sp" />
         </LinearLayout>
 
         <!-- Line chart only, on the side -->
         <ImageView
             android:id="@+id/single_chart"
-            android:layout_width="120dp"
-            android:layout_height="72dp"
-            android:layout_marginStart="10dp"
+            android:layout_width="86dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="8dp"
             android:contentDescription="@null"
             android:scaleType="fitXY" />
     </LinearLayout>
@@ -70,6 +73,6 @@
         android:visibility="gone"
         android:text="@string/widget_single_tap_configure"
         android:textColor="@color/widget_text_secondary"
-        android:textSize="13sp" />
+        android:textSize="12sp" />
 
 </FrameLayout>

@@ -8,6 +8,7 @@ import com.stockwidget.app.data.model.SearchResult
 import com.stockwidget.app.data.model.Stock
 import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.widget.WidgetUpdater
+import com.stockwidget.app.work.RefreshWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 data class UiState(
     val quotes: List<StockQuote> = emptyList(),
     val isLoading: Boolean = false,
+    val refreshMinutes: Int = 30,
     val message: String? = null
 )
 
@@ -28,7 +30,10 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         // Show cached data instantly, then refresh from the network.
-        _state.value = _state.value.copy(quotes = repository.cachedQuotes())
+        _state.value = _state.value.copy(
+            quotes = repository.cachedQuotes(),
+            refreshMinutes = repository.preferences.refreshMinutes
+        )
         refresh()
     }
 
@@ -61,6 +66,13 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
 
     fun isTracked(symbol: String): Boolean =
         repository.preferences.getStocks().any { it.symbol.equals(symbol, ignoreCase = true) }
+
+    /** Set how often the app/widgets auto-refresh (e.g. 30 or 60 minutes). */
+    fun setRefreshMinutes(minutes: Int) {
+        repository.preferences.refreshMinutes = minutes
+        RefreshWorker.schedule(getApplication())
+        _state.value = _state.value.copy(refreshMinutes = minutes)
+    }
 
     /** Cached quote for the detail screen — no network, instantly available. */
     fun cachedQuote(symbol: String): StockQuote? = repository.cachedQuote(symbol)

@@ -15,4 +15,5 @@
 
     <!-- Row -->
     <string name="row_open_prevclose">Open %1$s   ·   Close %2$s</string>
+    <string name="row_open_prevclose_short">O %1$s · C %2$s</string>
 </resources>

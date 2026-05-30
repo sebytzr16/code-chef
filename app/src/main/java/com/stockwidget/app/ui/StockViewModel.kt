@@ -7,6 +7,7 @@ import com.stockwidget.app.data.StockRepository
 import com.stockwidget.app.data.model.SearchResult
 import com.stockwidget.app.data.model.Stock
 import com.stockwidget.app.data.model.StockQuote
+import com.stockwidget.app.data.model.ThemeMode
 import com.stockwidget.app.widget.WidgetUpdater
 import com.stockwidget.app.work.RefreshWorker
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ data class UiState(
     val quotes: List<StockQuote> = emptyList(),
     val isLoading: Boolean = false,
     val refreshMinutes: Int = 30,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val message: String? = null
 )
 
@@ -32,7 +34,8 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
         // Show cached data instantly, then refresh from the network.
         _state.value = _state.value.copy(
             quotes = repository.cachedQuotes(),
-            refreshMinutes = repository.preferences.refreshMinutes
+            refreshMinutes = repository.preferences.refreshMinutes,
+            themeMode = repository.preferences.themeMode
         )
         refresh()
     }
@@ -72,6 +75,12 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
         repository.preferences.refreshMinutes = minutes
         RefreshWorker.schedule(getApplication())
         _state.value = _state.value.copy(refreshMinutes = minutes)
+    }
+
+    /** Set the light/dark appearance. */
+    fun setThemeMode(mode: ThemeMode) {
+        repository.preferences.themeMode = mode
+        _state.value = _state.value.copy(themeMode = mode)
     }
 
     /** Cached quote for the detail screen — no network, instantly available. */

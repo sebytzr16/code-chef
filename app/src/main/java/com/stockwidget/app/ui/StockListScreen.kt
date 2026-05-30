@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.stockwidget.app.data.model.SearchResult
 import com.stockwidget.app.data.model.StockQuote
+import com.stockwidget.app.data.model.ThemeMode
 import com.stockwidget.app.ui.theme.PriceDown
 import com.stockwidget.app.ui.theme.PriceUp
 import kotlinx.coroutines.delay
@@ -142,6 +143,16 @@ fun StockListScreen(
                                 },
                                 onClick = { menuOpen = false; viewModel.setRefreshMinutes(60) }
                             )
+                            HorizontalDivider()
+                            ThemeMenuItem("System theme", ThemeMode.SYSTEM, state.themeMode) {
+                                menuOpen = false; viewModel.setThemeMode(it)
+                            }
+                            ThemeMenuItem("Light theme", ThemeMode.LIGHT, state.themeMode) {
+                                menuOpen = false; viewModel.setThemeMode(it)
+                            }
+                            ThemeMenuItem("Dark theme", ThemeMode.DARK, state.themeMode) {
+                                menuOpen = false; viewModel.setThemeMode(it)
+                            }
                         }
                     }
                 },
@@ -226,6 +237,22 @@ fun StockListScreen(
             }
         )
     }
+}
+
+@Composable
+private fun ThemeMenuItem(
+    label: String,
+    mode: ThemeMode,
+    current: ThemeMode,
+    onSelect: (ThemeMode) -> Unit
+) {
+    DropdownMenuItem(
+        text = { Text(label) },
+        trailingIcon = {
+            if (current == mode) Icon(Icons.Filled.Check, contentDescription = null)
+        },
+        onClick = { onSelect(mode) }
+    )
 }
 
 @Composable

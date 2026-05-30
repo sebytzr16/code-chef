@@ -71,3 +71,6 @@ data class SearchResult(
     val name: String,
     val exchange: String = ""
 )
+
+/** User's chosen appearance: follow the system, or force light/dark. */
+enum class ThemeMode { SYSTEM, LIGHT, DARK }

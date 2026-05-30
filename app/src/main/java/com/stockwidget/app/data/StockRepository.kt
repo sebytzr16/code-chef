@@ -38,7 +38,8 @@ class StockRepository(
                         symbol = stock.symbol,
                         displayName = stock.displayName,
                         error = response.chart.error?.description ?: "No data",
-                        history = store.getHistory(stock.symbol)
+                        history = store.getHistory(stock.symbol),
+                        pinned = stock.pinned
                     )
                 } else {
                     val meta = result.meta
@@ -70,7 +71,8 @@ class StockRepository(
                         high = high,
                         low = low,
                         updatedAt = updatedAt,
-                        history = points
+                        history = points,
+                        pinned = stock.pinned
                     )
                 }
             } catch (e: Exception) {
@@ -78,7 +80,8 @@ class StockRepository(
                     symbol = stock.symbol,
                     displayName = stock.displayName,
                     error = e.message ?: "Network error",
-                    history = store.getHistory(stock.symbol)
+                    history = store.getHistory(stock.symbol),
+                    pinned = stock.pinned
                 )
             }
         }
@@ -112,31 +115,66 @@ class StockRepository(
             high = snap?.high ?: 0f,
             low = snap?.low ?: 0f,
             updatedAt = snap?.updatedAt ?: history.lastOrNull()?.timestamp ?: 0L,
-            history = history
+            history = history,
+            pinned = stock.pinned
         )
     }
 
     suspend fun searchSymbols(query: String): List<SearchResult> = withContext(Dispatchers.IO) {
-        if (query.isBlank()) return@withContext emptyList()
-        runCatching {
-            api.search(query).quotes.orEmpty().mapNotNull { q ->
-                val symbol = q.symbol
-                val type = q.quoteType
+        val q = query.trim()
+        if (q.isBlank()) return@withContext emptyList()
+
+        // Curated popular indices first (so e.g. "S&P 500" reliably surfaces ^GSPC),
+        // then live Yahoo results (equities, ETFs, index funds, …), de-duplicated.
+        val curated = curatedIndexMatches(q)
+        val remote = runCatching {
+            api.search(q).quotes.orEmpty().mapNotNull { item ->
+                val symbol = item.symbol
+                val type = item.quoteType
                 if (symbol.isNullOrBlank() || type == null || type !in TRADEABLE_TYPES) {
                     null
                 } else {
                     SearchResult(
                         symbol = symbol.uppercase(),
-                        name = q.longname ?: q.shortname ?: symbol,
-                        exchange = q.exchDisp.orEmpty()
+                        name = item.longname ?: item.shortname ?: symbol,
+                        exchange = item.exchDisp.orEmpty()
                     )
                 }
             }
         }.getOrDefault(emptyList())
+
+        (curated + remote).distinctBy { it.symbol }
     }
+
+    private fun curatedIndexMatches(query: String): List<SearchResult> {
+        if (query.length < 2) return emptyList()
+        val q = query.lowercase()
+        // Match when the query is a prefix of the name/ticker/a keyword, so company
+        // searches like "spotify" don't accidentally surface an index.
+        return POPULAR_INDICES.filter { idx ->
+            idx.name.lowercase().contains(q) ||
+                idx.symbol.removePrefix("^").lowercase().startsWith(q) ||
+                idx.keywords.any { it.startsWith(q) }
+        }.map { SearchResult(symbol = it.symbol, name = it.name, exchange = "Index") }
+    }
+
+    private data class IndexInfo(val symbol: String, val name: String, val keywords: List<String>)
 
     companion object {
         private val TRADEABLE_TYPES =
             setOf("EQUITY", "ETF", "INDEX", "MUTUALFUND", "CURRENCY", "CRYPTOCURRENCY", "FUTURE")
+
+        private val POPULAR_INDICES = listOf(
+            IndexInfo("^GSPC", "S&P 500", listOf("s&p", "sp", "sp500", "s&p 500", "spx", "500")),
+            IndexInfo("^IXIC", "NASDAQ Composite", listOf("nasdaq", "ixic", "composite")),
+            IndexInfo("^DJI", "Dow Jones Industrial Average", listOf("dow", "dji", "jones", "industrial")),
+            IndexInfo("^RUT", "Russell 2000", listOf("russell", "rut", "2000")),
+            IndexInfo("^VIX", "CBOE Volatility Index", listOf("vix", "volatility")),
+            IndexInfo("^FTSE", "FTSE 100", listOf("ftse", "footsie", "uk 100")),
+            IndexInfo("^GDAXI", "DAX", listOf("dax", "german")),
+            IndexInfo("^FCHI", "CAC 40", listOf("cac", "cac 40", "french")),
+            IndexInfo("^N225", "Nikkei 225", listOf("nikkei", "n225", "japan")),
+            IndexInfo("^STOXX50E", "Euro Stoxx 50", listOf("stoxx", "eurostoxx", "euro stoxx"))
+        )
     }
 }

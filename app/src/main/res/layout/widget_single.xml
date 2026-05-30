@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="10dp">
+    android:padding="12dp">
 
     <!-- Data content -->
     <LinearLayout
@@ -15,33 +15,42 @@
         android:gravity="center_vertical"
         android:baselineAligned="false">
 
-        <!-- Name + price (big), open/close (small) -->
+        <!-- Name + price side by side (centered vertically), open/close below -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/single_symbol"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:text="AAPL"
-                android:textColor="@color/widget_text_primary"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/single_price"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxLines="1"
-                android:text="$0.00"
-                android:textColor="@color/widget_text_primary"
-                android:textSize="17sp"
-                android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/single_symbol"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:text="AAPL"
+                    android:textColor="@color/widget_text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/single_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:maxLines="1"
+                    android:text="$0.00"
+                    android:textColor="@color/widget_text_primary"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/single_openclose"
@@ -49,17 +58,18 @@
                 android:layout_height="wrap_content"
                 android:maxLines="1"
                 android:ellipsize="end"
+                android:paddingTop="2dp"
                 android:text="O $0.00 · C $0.00"
                 android:textColor="@color/widget_text_secondary"
-                android:textSize="9sp" />
+                android:textSize="11sp" />
         </LinearLayout>
 
         <!-- Line chart only, on the side -->
         <ImageView
             android:id="@+id/single_chart"
-            android:layout_width="86dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="96dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="10dp"
             android:contentDescription="@null"
             android:scaleType="fitXY" />
     </LinearLayout>

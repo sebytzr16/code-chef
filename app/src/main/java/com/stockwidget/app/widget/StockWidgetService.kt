@@ -40,7 +40,7 @@ private class StockRemoteViewsFactory(
         if (position !in quotes.indices) return views
         val q = quotes[position]
 
-        views.setTextViewText(R.id.row_symbol, q.symbol.uppercase())
+        views.setTextViewText(R.id.row_symbol, q.displaySymbol)
 
         if (q.hasData || q.history.isNotEmpty()) {
             views.setTextViewText(R.id.row_price, formatMoney(q.current))

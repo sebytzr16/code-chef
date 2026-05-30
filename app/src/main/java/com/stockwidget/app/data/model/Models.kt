@@ -5,7 +5,8 @@ package com.stockwidget.app.data.model
  */
 data class Stock(
     val symbol: String,
-    val displayName: String = symbol
+    val displayName: String = symbol,
+    val pinned: Boolean = false
 )
 
 /**
@@ -31,6 +32,7 @@ data class StockQuote(
     val low: Float = 0f,
     val updatedAt: Long = 0L,
     val history: List<PricePoint> = emptyList(),
+    val pinned: Boolean = false,
     val error: String? = null
 ) {
     /** Change vs. the day's opening price. */
@@ -41,6 +43,9 @@ data class StockQuote(
     val isUp: Boolean get() = current >= open
 
     val hasData: Boolean get() = updatedAt > 0L && error == null
+
+    /** Symbol for display: index tickers like "^GSPC" show without the caret. */
+    val displaySymbol: String get() = symbol.removePrefix("^").uppercase()
 }
 
 /**

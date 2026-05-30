@@ -8,7 +8,6 @@
     <string name="widget_updated_at">Updated %1$s</string>
     <string name="widget_loading">Loading prices…</string>
     <string name="widget_no_stocks">Open the app to add stocks</string>
-    <string name="widget_needs_key">Open the app and add your Finnhub API key</string>
     <string name="widget_description">Track your stocks with live prices and a green/red chart.</string>
     <string name="widget_single_description">A single stock with its price and green/red chart.</string>
     <string name="widget_single_tap_configure">Tap to pick a stock</string>

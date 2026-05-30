@@ -8,20 +8,15 @@ import com.stockwidget.app.data.model.QuoteSnapshot
 import com.stockwidget.app.data.model.Stock
 
 /**
- * Lightweight persistence over SharedPreferences. Stores the API key, the tracked
- * symbols, and the per-symbol intraday price history (JSON via Gson).
+ * Lightweight persistence over SharedPreferences. Stores the tracked symbols, per-symbol
+ * snapshots + intraday price history, and each single-stock widget's chosen symbol
+ * (JSON via Gson).
  */
 class PreferencesStore(context: Context) {
 
     private val prefs = context.applicationContext
         .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val gson = Gson()
-
-    var apiKey: String
-        get() = prefs.getString(KEY_API, "").orEmpty()
-        set(value) = prefs.edit().putString(KEY_API, value.trim()).apply()
-
-    val hasApiKey: Boolean get() = apiKey.isNotBlank()
 
     /** How often the widget refreshes, in minutes. */
     var refreshMinutes: Int
@@ -84,24 +79,11 @@ class PreferencesStore(context: Context) {
     fun getHistory(symbol: String): List<PricePoint> =
         getHistoryMap()[symbol.uppercase()].orEmpty()
 
-    /**
-     * Append a sample to a symbol's intraday history. History from previous days is
-     * discarded so the sparkline only reflects the current session, and the list is
-     * capped at [MAX_POINTS].
-     */
-    fun appendPricePoint(symbol: String, point: PricePoint) {
-        val key = symbol.uppercase()
+    /** Replace a symbol's intraday series with the freshly fetched points (capped). */
+    fun saveHistory(symbol: String, points: List<PricePoint>) {
         val map = getHistoryMap().toMutableMap()
-        val existing = map[key].orEmpty().filter { isSameDay(it.timestamp, point.timestamp) }
-        val updated = (existing + point).takeLast(MAX_POINTS)
-        map[key] = updated
+        map[symbol.uppercase()] = points.takeLast(MAX_POINTS)
         saveHistoryMap(map)
-    }
-
-    private fun isSameDay(a: Long, b: Long): Boolean {
-        val dayMs = 24L * 60 * 60 * 1000
-        // Compare by local-day buckets (rough; good enough for a sparkline reset).
-        return (a + LOCAL_OFFSET_MS) / dayMs == (b + LOCAL_OFFSET_MS) / dayMs
     }
 
     // ---- Quote snapshots (full last-known data, for instant offline render) -
@@ -156,7 +138,6 @@ class PreferencesStore(context: Context) {
 
     companion object {
         private const val PREFS_NAME = "stock_widget_prefs"
-        private const val KEY_API = "api_key"
         private const val KEY_STOCKS = "stocks"
         private const val KEY_HISTORY = "history"
         private const val KEY_SNAPSHOTS = "snapshots"
@@ -164,6 +145,5 @@ class PreferencesStore(context: Context) {
         private const val KEY_REFRESH = "refresh_minutes"
         private const val DEFAULT_REFRESH_MIN = 30
         private const val MAX_POINTS = 120
-        private val LOCAL_OFFSET_MS = java.util.TimeZone.getDefault().rawOffset.toLong()
     }
 }

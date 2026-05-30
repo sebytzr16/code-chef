@@ -9,8 +9,8 @@ data class Stock(
 )
 
 /**
- * A single intraday price sample. We accumulate these on every refresh to build
- * the sparkline locally, since Finnhub's candle endpoint is premium-only.
+ * A single intraday price point (epoch millis + price) from the Yahoo chart series,
+ * used to draw the sparkline.
  */
 data class PricePoint(
     val timestamp: Long,
@@ -63,4 +63,11 @@ data class QuoteSnapshot(
     val high: Float = 0f,
     val low: Float = 0f,
     val updatedAt: Long = 0L
+)
+
+/** A symbol-search result shown when the user is adding a stock. */
+data class SearchResult(
+    val symbol: String,
+    val name: String,
+    val exchange: String = ""
 )

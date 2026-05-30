@@ -62,11 +62,11 @@ class StockWidgetProvider : AppWidgetProvider() {
             views.setRemoteAdapter(R.id.widget_list, serviceIntent)
             views.setEmptyView(R.id.widget_list, R.id.widget_empty)
 
-            // Empty-state text depends on whether the user is set up yet.
-            val emptyText = when {
-                !store.hasApiKey -> context.getString(R.string.widget_needs_key)
-                store.getStocks().isEmpty() -> context.getString(R.string.widget_no_stocks)
-                else -> context.getString(R.string.widget_loading)
+            // Empty-state text.
+            val emptyText = if (store.getStocks().isEmpty()) {
+                context.getString(R.string.widget_no_stocks)
+            } else {
+                context.getString(R.string.widget_loading)
             }
             views.setTextViewText(R.id.widget_empty, emptyText)
 

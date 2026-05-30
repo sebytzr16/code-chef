@@ -4,11 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.stockwidget.app.data.StockRepository
+import com.stockwidget.app.data.model.SearchResult
 import com.stockwidget.app.data.model.Stock
 import com.stockwidget.app.data.model.StockQuote
-import com.stockwidget.app.data.remote.SymbolMatch
 import com.stockwidget.app.widget.WidgetUpdater
-import com.stockwidget.app.work.RefreshWorker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,8 +15,6 @@ import kotlinx.coroutines.launch
 
 data class UiState(
     val quotes: List<StockQuote> = emptyList(),
-    val apiKey: String = "",
-    val refreshMinutes: Int = 30,
     val isLoading: Boolean = false,
     val message: String? = null
 )
@@ -25,32 +22,19 @@ data class UiState(
 class StockViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repository = StockRepository(app)
-    private val store = repository.preferences
 
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state.asStateFlow()
 
-    val hasApiKey: Boolean get() = store.hasApiKey
-
     init {
-        loadFromCache()
+        // Show cached data instantly, then refresh from the network.
+        _state.value = _state.value.copy(quotes = repository.cachedQuotes())
         refresh()
     }
 
-    private fun loadFromCache() {
-        _state.value = _state.value.copy(
-            quotes = repository.cachedQuotes(),
-            apiKey = store.apiKey,
-            refreshMinutes = store.refreshMinutes
-        )
-    }
-
     fun refresh() {
-        if (!store.hasApiKey) {
-            _state.value = _state.value.copy(
-                quotes = repository.cachedQuotes(),
-                message = if (store.getStocks().isEmpty()) null else "Add your Finnhub API key to load prices"
-            )
+        if (repository.preferences.getStocks().isEmpty()) {
+            _state.value = _state.value.copy(quotes = emptyList())
             return
         }
         _state.value = _state.value.copy(isLoading = true)
@@ -64,36 +48,26 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
     fun addStock(symbol: String, name: String) {
         val clean = symbol.trim().uppercase()
         if (clean.isEmpty()) return
-        store.addStock(Stock(clean, name.ifBlank { clean }))
-        loadFromCache()
+        repository.preferences.addStock(Stock(clean, name.ifBlank { clean }))
+        _state.value = _state.value.copy(quotes = repository.cachedQuotes())
         refresh()
     }
 
     fun removeStock(symbol: String) {
-        store.removeStock(symbol)
-        loadFromCache()
+        repository.preferences.removeStock(symbol)
+        _state.value = _state.value.copy(quotes = repository.cachedQuotes())
         WidgetUpdater.notifyDataChanged(getApplication())
     }
 
-    fun saveApiKey(key: String) {
-        store.apiKey = key
-        _state.value = _state.value.copy(apiKey = key, message = "API key saved")
-        RefreshWorker.schedule(getApplication())
-        refresh()
-    }
-
-    fun setRefreshMinutes(minutes: Int) {
-        store.refreshMinutes = minutes
-        _state.value = _state.value.copy(refreshMinutes = minutes)
-        RefreshWorker.schedule(getApplication())
-    }
-
-    fun clearMessage() {
-        _state.value = _state.value.copy(message = null)
-    }
+    fun isTracked(symbol: String): Boolean =
+        repository.preferences.getStocks().any { it.symbol.equals(symbol, ignoreCase = true) }
 
     /** Cached quote for the detail screen — no network, instantly available. */
     fun cachedQuote(symbol: String): StockQuote? = repository.cachedQuote(symbol)
 
-    suspend fun search(query: String): List<SymbolMatch> = repository.searchSymbols(query)
+    suspend fun search(query: String): List<SearchResult> = repository.searchSymbols(query)
+
+    fun clearMessage() {
+        _state.value = _state.value.copy(message = null)
+    }
 }

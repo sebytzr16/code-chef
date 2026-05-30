@@ -1,5 +1,6 @@
-# Keep Gson model classes (serialized via reflection).
+# Keep Gson model + API response classes (serialized via reflection).
 -keep class com.stockwidget.app.data.model.** { *; }
+-keep class com.stockwidget.app.data.remote.** { *; }
 
 # Retrofit
 -keepattributes Signature

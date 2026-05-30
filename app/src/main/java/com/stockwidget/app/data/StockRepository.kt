@@ -3,75 +3,74 @@ package com.stockwidget.app.data
 import android.content.Context
 import com.stockwidget.app.data.model.PricePoint
 import com.stockwidget.app.data.model.QuoteSnapshot
+import com.stockwidget.app.data.model.SearchResult
 import com.stockwidget.app.data.model.Stock
 import com.stockwidget.app.data.model.StockQuote
-import com.stockwidget.app.data.remote.FinnhubApi
-import com.stockwidget.app.data.remote.FinnhubClient
-import com.stockwidget.app.data.remote.SymbolMatch
+import com.stockwidget.app.data.remote.YahooApi
+import com.stockwidget.app.data.remote.YahooClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Coordinates remote quotes (Finnhub) with the locally persisted symbols and history.
+ * Coordinates keyless Yahoo Finance quotes with the locally persisted symbols, snapshots
+ * and intraday history. No API key required.
  */
 class StockRepository(
     context: Context,
-    private val api: FinnhubApi = FinnhubClient.api
+    private val api: YahooApi = YahooClient.api
 ) {
     private val store = PreferencesStore(context)
 
     val preferences: PreferencesStore get() = store
 
     /**
-     * Fetches the latest quote for each tracked symbol, records a history sample, and
-     * returns the combined view models. Network failures are captured per-symbol so one
-     * bad ticker doesn't blank the whole widget.
+     * Fetches a fresh intraday chart for each tracked symbol, stores a snapshot + the
+     * series, and returns the view models. One bad ticker won't blank the others.
      */
     suspend fun refreshAll(): List<StockQuote> = withContext(Dispatchers.IO) {
-        val token = store.apiKey
         store.getStocks().map { stock ->
-            if (token.isBlank()) {
-                return@map StockQuote(
-                    symbol = stock.symbol,
-                    displayName = stock.displayName,
-                    error = "No API key"
-                )
-            }
             try {
-                val quote = api.getQuote(stock.symbol, token)
-                if (quote.current <= 0f && quote.open <= 0f) {
-                    // Finnhub returns all-zeros for unknown/unsupported symbols.
+                val response = api.getChart(stock.symbol, "1d", "5m")
+                val result = response.chart.result?.firstOrNull()
+                val price = result?.meta?.regularMarketPrice
+                if (result == null || price == null) {
                     StockQuote(
                         symbol = stock.symbol,
                         displayName = stock.displayName,
-                        error = "No data",
+                        error = response.chart.error?.description ?: "No data",
                         history = store.getHistory(stock.symbol)
                     )
                 } else {
-                    val now = System.currentTimeMillis()
-                    store.appendPricePoint(stock.symbol, PricePoint(now, quote.current))
-                    // Persist the full snapshot so the app/widgets render instantly offline.
+                    val meta = result.meta
+                    val series = result.indicators.quote?.firstOrNull()
+                    val points = buildPoints(result.timestamp, series?.close)
+
+                    val open = series?.open?.firstOrNull { it != null }
+                        ?: points.firstOrNull()?.price ?: price
+                    val previousClose = meta.chartPreviousClose ?: meta.previousClose ?: 0f
+                    val high = meta.regularMarketDayHigh
+                        ?: series?.high?.filterNotNull()?.maxOrNull() ?: 0f
+                    val low = meta.regularMarketDayLow
+                        ?: series?.low?.filterNotNull()?.minOrNull() ?: 0f
+                    val updatedAt = meta.regularMarketTime?.let { it * 1000 }
+                        ?: System.currentTimeMillis()
+
+                    store.saveHistory(stock.symbol, points)
                     store.saveSnapshot(
                         stock.symbol,
-                        QuoteSnapshot(
-                            current = quote.current,
-                            open = quote.open,
-                            previousClose = quote.previousClose,
-                            high = quote.high,
-                            low = quote.low,
-                            updatedAt = now
-                        )
+                        QuoteSnapshot(price, open, previousClose, high, low, updatedAt)
                     )
+
                     StockQuote(
                         symbol = stock.symbol,
                         displayName = stock.displayName,
-                        current = quote.current,
-                        open = quote.open,
-                        previousClose = quote.previousClose,
-                        high = quote.high,
-                        low = quote.low,
-                        updatedAt = now,
-                        history = store.getHistory(stock.symbol)
+                        current = price,
+                        open = open,
+                        previousClose = previousClose,
+                        high = high,
+                        low = low,
+                        updatedAt = updatedAt,
+                        history = points
                     )
                 }
             } catch (e: Exception) {
@@ -82,6 +81,14 @@ class StockRepository(
                     history = store.getHistory(stock.symbol)
                 )
             }
+        }
+    }
+
+    private fun buildPoints(timestamps: List<Long>?, closes: List<Float?>?): List<PricePoint> {
+        if (timestamps == null || closes == null) return emptyList()
+        return timestamps.indices.mapNotNull { i ->
+            val price = closes.getOrNull(i)
+            if (price != null && price > 0f) PricePoint(timestamps[i] * 1000, price) else null
         }
     }
 
@@ -109,9 +116,27 @@ class StockRepository(
         )
     }
 
-    suspend fun searchSymbols(query: String): List<SymbolMatch> = withContext(Dispatchers.IO) {
-        val token = store.apiKey
-        if (token.isBlank() || query.isBlank()) return@withContext emptyList()
-        runCatching { api.search(query, token).result }.getOrDefault(emptyList())
+    suspend fun searchSymbols(query: String): List<SearchResult> = withContext(Dispatchers.IO) {
+        if (query.isBlank()) return@withContext emptyList()
+        runCatching {
+            api.search(query).quotes.orEmpty().mapNotNull { q ->
+                val symbol = q.symbol
+                val type = q.quoteType
+                if (symbol.isNullOrBlank() || type == null || type !in TRADEABLE_TYPES) {
+                    null
+                } else {
+                    SearchResult(
+                        symbol = symbol.uppercase(),
+                        name = q.longname ?: q.shortname ?: symbol,
+                        exchange = q.exchDisp.orEmpty()
+                    )
+                }
+            }
+        }.getOrDefault(emptyList())
+    }
+
+    companion object {
+        private val TRADEABLE_TYPES =
+            setOf("EQUITY", "ETF", "INDEX", "MUTUALFUND", "CURRENCY", "CRYPTOCURRENCY", "FUTURE")
     }
 }

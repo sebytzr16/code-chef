@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken
 import com.stockwidget.app.data.model.PricePoint
 import com.stockwidget.app.data.model.QuoteSnapshot
 import com.stockwidget.app.data.model.Stock
+import com.stockwidget.app.data.model.ThemeMode
 
 /**
  * Lightweight persistence over SharedPreferences. Stores the tracked symbols, per-symbol
@@ -22,6 +23,12 @@ class PreferencesStore(context: Context) {
     var refreshMinutes: Int
         get() = prefs.getInt(KEY_REFRESH, DEFAULT_REFRESH_MIN)
         set(value) = prefs.edit().putInt(KEY_REFRESH, value).apply()
+
+    /** Light/dark appearance preference. */
+    var themeMode: ThemeMode
+        get() = runCatching { ThemeMode.valueOf(prefs.getString(KEY_THEME, null) ?: "") }
+            .getOrDefault(ThemeMode.SYSTEM)
+        set(value) = prefs.edit().putString(KEY_THEME, value.name).apply()
 
     fun getStocks(): List<Stock> {
         val json = prefs.getString(KEY_STOCKS, null) ?: return emptyList()
@@ -143,6 +150,7 @@ class PreferencesStore(context: Context) {
         private const val KEY_SNAPSHOTS = "snapshots"
         private const val KEY_WIDGET_SYMBOLS = "widget_symbols"
         private const val KEY_REFRESH = "refresh_minutes"
+        private const val KEY_THEME = "theme_mode"
         private const val DEFAULT_REFRESH_MIN = 30
         private const val MAX_POINTS = 120
     }

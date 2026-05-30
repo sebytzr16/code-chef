@@ -81,14 +81,14 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(
                     R.id.single_openclose,
                     context.getString(
-                        R.string.row_open_prevclose,
+                        R.string.row_open_prevclose_short,
                         money(quote.open),
                         money(quote.previousClose)
                     )
                 )
                 views.setImageViewBitmap(
                     R.id.single_chart,
-                    ChartBitmap.render(quote, widthDp = 120, heightDp = 72)
+                    ChartBitmap.render(quote, widthDp = 86, heightDp = 40)
                 )
                 views.setViewVisibility(R.id.single_chart, View.VISIBLE)
             } else {

@@ -8,6 +8,7 @@ import com.stockwidget.app.data.model.Stock
 import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.data.remote.YahooApi
 import com.stockwidget.app.data.remote.YahooClient
+import com.stockwidget.app.util.Exchanges
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -59,8 +60,7 @@ class StockRepository(
                     val updatedAt = meta.regularMarketTime?.let { it * 1000 }
                         ?: System.currentTimeMillis()
                     val currency = meta.currency?.takeIf { it.isNotBlank() } ?: "USD"
-                    val exchange = meta.fullExchangeName?.takeIf { it.isNotBlank() }
-                        ?: meta.exchangeName.orEmpty()
+                    val exchange = Exchanges.friendly(meta.exchangeName, meta.fullExchangeName)
 
                     store.saveHistory(stock.symbol, points)
                     store.saveSnapshot(

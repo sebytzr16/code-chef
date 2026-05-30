@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,8 +21,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -208,7 +213,10 @@ fun StockListScreen(
                                 quote = quote,
                                 editMode = editMode,
                                 onClick = { onOpenDetail(quote.symbol) },
-                                onDelete = { pendingDelete = quote }
+                                onDelete = { pendingDelete = quote },
+                                onTogglePin = { viewModel.togglePin(quote.symbol) },
+                                onMoveUp = { viewModel.moveUp(quote.symbol) },
+                                onMoveDown = { viewModel.moveDown(quote.symbol) }
                             )
                         }
                     }
@@ -224,7 +232,7 @@ fun StockListScreen(
     pendingDelete?.let { quote ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Remove ${quote.symbol.uppercase()}?") },
+            title = { Text("Remove ${quote.displaySymbol}?") },
             text = { Text("It will be removed from your list and any widgets.") },
             confirmButton = {
                 TextButton(onClick = {
@@ -292,7 +300,7 @@ private fun SearchResults(
                 ) {
                     Column(Modifier.weight(1f)) {
                         Text(
-                            r.symbol,
+                            r.symbol.removePrefix("^"),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -321,7 +329,10 @@ private fun StockCard(
     quote: StockQuote,
     editMode: Boolean,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onTogglePin: () -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit
 ) {
     val up = quote.isUp
     val accent = if (up) PriceUp else PriceDown
@@ -330,22 +341,32 @@ private fun StockCard(
     val container = if (up) PriceUp.copy(alpha = 0.15f) else PriceDown.copy(alpha = 0.15f)
 
     Card(
-        onClick = onClick,
+        onClick = { if (!editMode) onClick() },
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(containerColor = container)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 18.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text(
-                    quote.symbol.uppercase(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (quote.pinned) {
+                        Icon(
+                            Icons.Filled.PushPin,
+                            contentDescription = "Pinned",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 4.dp).size(14.dp)
+                        )
+                    }
+                    Text(
+                        quote.displaySymbol,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Text(
                     quote.displayName,
                     style = MaterialTheme.typography.labelMedium,
@@ -355,34 +376,74 @@ private fun StockCard(
                 )
             }
 
-            Column(horizontalAlignment = Alignment.End, modifier = Modifier.padding(end = 14.dp)) {
-                Text(
-                    if (hasData) money(quote.current) else "—",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                if (hasData) {
-                    val arrow = if (up) "▲" else "▼"
-                    Text(
-                        "$arrow ${percent(quote.changePercent)}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = accent,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            Sparkline(
-                quote = quote,
-                modifier = Modifier.width(72.dp).height(40.dp)
-            )
-
             if (editMode) {
-                IconButton(onClick = onDelete, modifier = Modifier.padding(start = 4.dp)) {
-                    Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = PriceDown)
+                EditControls(
+                    pinned = quote.pinned,
+                    onTogglePin = onTogglePin,
+                    onMoveUp = onMoveUp,
+                    onMoveDown = onMoveDown,
+                    onDelete = onDelete
+                )
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.padding(end = 14.dp)
+                ) {
+                    Text(
+                        if (hasData) money(quote.current) else "—",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (hasData) {
+                        val arrow = if (up) "▲" else "▼"
+                        Text(
+                            "$arrow ${percent(quote.changePercent)}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = accent,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
+                Sparkline(
+                    quote = quote,
+                    modifier = Modifier.width(72.dp).height(40.dp)
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun EditControls(
+    pinned: Boolean,
+    onTogglePin: () -> Unit,
+    onMoveUp: () -> Unit,
+    onMoveDown: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        SmallIcon(
+            icon = if (pinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+            description = if (pinned) "Unpin" else "Pin",
+            tint = if (pinned) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant,
+            onClick = onTogglePin
+        )
+        SmallIcon(Icons.Filled.KeyboardArrowUp, "Move up", onClick = onMoveUp)
+        SmallIcon(Icons.Filled.KeyboardArrowDown, "Move down", onClick = onMoveDown)
+        SmallIcon(Icons.Filled.Delete, "Remove", tint = PriceDown, onClick = onDelete)
+    }
+}
+
+@Composable
+private fun SmallIcon(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    onClick: () -> Unit
+) {
+    IconButton(onClick = onClick, modifier = Modifier.size(40.dp)) {
+        Icon(icon, contentDescription = description, tint = tint, modifier = Modifier.size(22.dp))
     }
 }
 

@@ -104,7 +104,7 @@ private fun ConfigContent(stocks: List<Stock>, onPick: (Stock) -> Unit) {
                 ) {
                     Column(Modifier.padding(16.dp)) {
                         Text(
-                            stock.symbol.uppercase(),
+                            stock.symbol.removePrefix("^").uppercase(),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )

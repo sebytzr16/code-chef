@@ -74,7 +74,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
 
             val hasData = quote.hasData || quote.history.isNotEmpty()
 
-            views.setTextViewText(R.id.single_symbol, quote.symbol.uppercase())
+            views.setTextViewText(R.id.single_symbol, quote.displaySymbol)
 
             if (hasData) {
                 views.setTextViewText(R.id.single_price, money(quote.current))
@@ -88,7 +88,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 )
                 views.setImageViewBitmap(
                     R.id.single_chart,
-                    ChartBitmap.render(quote, widthDp = 86, heightDp = 40)
+                    ChartBitmap.render(quote, widthDp = 96, heightDp = 48)
                 )
                 views.setViewVisibility(R.id.single_chart, View.VISIBLE)
             } else {

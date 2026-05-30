@@ -12,8 +12,8 @@ import com.stockwidget.app.data.model.StockQuote
 
 /**
  * Renders an intraday sparkline for a [StockQuote] into a [Bitmap] that RemoteViews can
- * display. Green when the price is at/above the day's open, red when below. A faint
- * baseline marks the opening price.
+ * display. Green when the price is at/above the day's open, red when below. Only the
+ * price line (and its gradient fill) is drawn — no baseline.
  */
 object ChartBitmap {
 
@@ -21,7 +21,6 @@ object ChartBitmap {
     val GREEN_FILL = 0x334CAF50
     val RED = 0xFFEF5350.toInt()
     val RED_FILL = 0x33EF5350
-    private const val BASELINE = 0x40FFFFFF
 
     fun render(quote: StockQuote, widthDp: Int = 72, heightDp: Int = 40): Bitmap {
         val w = dp(widthDp)
@@ -45,9 +44,6 @@ object ChartBitmap {
 
         var min = prices.min()
         var max = prices.max()
-        // Include the open price in the range so the baseline is always visible.
-        min = minOf(min, quote.open)
-        max = maxOf(max, quote.open)
         if (max - min < 0.0001f) {
             max += 1f
             min -= 1f
@@ -56,15 +52,6 @@ object ChartBitmap {
 
         fun x(i: Int) = pad + chartW * i / (prices.size - 1)
         fun y(v: Float) = pad + chartH * (1f - (v - min) / range)
-
-        // Opening-price baseline.
-        val baselinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.color = BASELINE
-            strokeWidth = dp(1).toFloat()
-            style = Paint.Style.STROKE
-        }
-        val by = y(quote.open)
-        canvas.drawLine(pad, by, w - pad, by, baselinePaint)
 
         // Filled area under the line.
         val areaPath = Path().apply {

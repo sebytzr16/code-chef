@@ -61,7 +61,7 @@ fun StockDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(quote.symbol.uppercase()) },
+                title = { Text(quote.displaySymbol) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

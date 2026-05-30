@@ -46,8 +46,32 @@ class PreferencesStore(context: Context) {
         val current = getStocks().toMutableList()
         if (current.none { it.symbol.equals(stock.symbol, ignoreCase = true) }) {
             current.add(stock)
-            saveStocks(current)
+            // Keep pinned stocks grouped at the top.
+            saveStocks(current.sortedByDescending { it.pinned })
         }
+    }
+
+    /** Toggle a stock's pinned state; pinned stocks float to the top of the list. */
+    fun togglePin(symbol: String) {
+        val list = getStocks().map {
+            if (it.symbol.equals(symbol, ignoreCase = true)) it.copy(pinned = !it.pinned) else it
+        }
+        saveStocks(list.sortedByDescending { it.pinned })
+    }
+
+    /**
+     * Move a stock one position up or down. Reordering only happens within the same
+     * pinned group, so pinned stocks always stay above unpinned ones.
+     */
+    fun moveStock(symbol: String, up: Boolean) {
+        val list = getStocks().toMutableList()
+        val i = list.indexOfFirst { it.symbol.equals(symbol, ignoreCase = true) }
+        if (i < 0) return
+        val j = if (up) i - 1 else i + 1
+        if (j !in list.indices) return
+        if (list[i].pinned != list[j].pinned) return
+        list[i] = list[j].also { list[j] = list[i] }
+        saveStocks(list)
     }
 
     fun removeStock(symbol: String) {
@@ -59,14 +83,6 @@ class PreferencesStore(context: Context) {
         val snaps = getSnapshotMap().toMutableMap()
         snaps.remove(symbol.uppercase())
         saveSnapshotMap(snaps)
-    }
-
-    fun moveStock(from: Int, to: Int) {
-        val list = getStocks().toMutableList()
-        if (from in list.indices && to in list.indices) {
-            list.add(to, list.removeAt(from))
-            saveStocks(list)
-        }
     }
 
     // ---- Price history -----------------------------------------------------

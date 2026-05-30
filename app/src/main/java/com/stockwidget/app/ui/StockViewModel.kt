@@ -70,6 +70,19 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
     fun isTracked(symbol: String): Boolean =
         repository.preferences.getStocks().any { it.symbol.equals(symbol, ignoreCase = true) }
 
+    fun togglePin(symbol: String) = applyOrderChange { repository.preferences.togglePin(symbol) }
+
+    fun moveUp(symbol: String) = applyOrderChange { repository.preferences.moveStock(symbol, up = true) }
+
+    fun moveDown(symbol: String) = applyOrderChange { repository.preferences.moveStock(symbol, up = false) }
+
+    /** Run a reorder/pin change, then refresh the on-screen list and the widgets. */
+    private fun applyOrderChange(change: () -> Unit) {
+        change()
+        _state.value = _state.value.copy(quotes = repository.cachedQuotes())
+        WidgetUpdater.notifyDataChanged(getApplication())
+    }
+
     /** Set how often the app/widgets auto-refresh (e.g. 30 or 60 minutes). */
     fun setRefreshMinutes(minutes: Int) {
         repository.preferences.refreshMinutes = minutes

@@ -41,8 +41,8 @@ fun Sparkline(
         val chartW = size.width - pad * 2
         val chartH = size.height - pad * 2
 
-        var min = prices.min().coerceAtMost(quote.open)
-        var max = prices.max().coerceAtLeast(quote.open)
+        var min = prices.min()
+        var max = prices.max()
         if (max - min < 0.0001f) {
             max += 1f; min -= 1f
         }
@@ -50,15 +50,6 @@ fun Sparkline(
 
         fun x(i: Int) = pad + chartW * i / (prices.size - 1)
         fun y(v: Float) = pad + chartH * (1f - (v - min) / range)
-
-        // Opening-price baseline.
-        val baseY = y(quote.open)
-        drawLine(
-            color = Color.Gray.copy(alpha = 0.3f),
-            start = Offset(pad, baseY),
-            end = Offset(size.width - pad, baseY),
-            strokeWidth = 2f
-        )
 
         // Filled gradient area.
         val area = Path().apply {

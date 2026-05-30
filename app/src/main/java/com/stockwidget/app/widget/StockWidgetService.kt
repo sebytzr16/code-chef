@@ -8,6 +8,7 @@ import android.widget.RemoteViewsService
 import com.stockwidget.app.R
 import com.stockwidget.app.data.StockRepository
 import com.stockwidget.app.data.model.StockQuote
+import com.stockwidget.app.util.Money
 
 /** Provides the row views for the widget's ListView. */
 class StockWidgetService : RemoteViewsService() {
@@ -43,13 +44,19 @@ private class StockRemoteViewsFactory(
         views.setTextViewText(R.id.row_symbol, q.displaySymbol)
 
         if (q.hasData || q.history.isNotEmpty()) {
-            views.setTextViewText(R.id.row_price, formatMoney(q.current))
+            views.setTextViewText(R.id.row_price, Money.format(q.current, q.currency))
+            if (q.currency.isNotBlank()) {
+                views.setTextViewText(R.id.row_currency, q.currency.uppercase())
+                views.setViewVisibility(R.id.row_currency, View.VISIBLE)
+            } else {
+                views.setViewVisibility(R.id.row_currency, View.GONE)
+            }
             views.setTextViewText(
                 R.id.row_openclose,
                 context.getString(
                     R.string.row_open_prevclose,
-                    formatMoney(q.open),
-                    formatMoney(q.previousClose)
+                    Money.format(q.open, q.currency),
+                    Money.format(q.previousClose, q.currency)
                 )
             )
             views.setImageViewBitmap(R.id.row_chart, ChartBitmap.render(q))
@@ -57,6 +64,7 @@ private class StockRemoteViewsFactory(
         } else {
             // No data yet (e.g. error or never fetched).
             views.setTextViewText(R.id.row_price, "—")
+            views.setViewVisibility(R.id.row_currency, View.GONE)
             views.setTextViewText(R.id.row_openclose, q.error ?: "")
             views.setViewVisibility(R.id.row_chart, View.INVISIBLE)
         }
@@ -72,6 +80,4 @@ private class StockRemoteViewsFactory(
     override fun getViewTypeCount(): Int = 1
     override fun getItemId(position: Int): Long = position.toLong()
     override fun hasStableIds(): Boolean = true
-
-    private fun formatMoney(value: Float): String = "$" + String.format("%,.2f", value)
 }

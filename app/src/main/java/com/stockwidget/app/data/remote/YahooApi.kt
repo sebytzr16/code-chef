@@ -53,6 +53,9 @@ data class ChartResult(
 
 data class ChartMeta(
     @SerializedName("symbol") val symbol: String? = null,
+    @SerializedName("currency") val currency: String? = null,
+    @SerializedName("exchangeName") val exchangeName: String? = null,
+    @SerializedName("fullExchangeName") val fullExchangeName: String? = null,
     @SerializedName("regularMarketPrice") val regularMarketPrice: Float? = null,
     @SerializedName("chartPreviousClose") val chartPreviousClose: Float? = null,
     @SerializedName("previousClose") val previousClose: Float? = null,

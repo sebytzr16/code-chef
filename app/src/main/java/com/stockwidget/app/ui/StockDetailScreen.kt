@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.ui.theme.PriceDown
 import com.stockwidget.app.ui.theme.PriceUp
+import com.stockwidget.app.util.Money
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -86,15 +87,25 @@ fun StockDetailScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(8.dp))
-            Text(
-                if (hasData) money(quote.current) else "—",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    if (hasData) Money.format(quote.current, quote.currency) else "—",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                if (hasData && quote.currency.isNotBlank()) {
+                    Text(
+                        quote.currency.uppercase(),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                    )
+                }
+            }
             if (hasData) {
                 val arrow = if (up) "▲" else "▼"
                 Text(
-                    "$arrow ${money(abs(quote.change))}  (${percent(quote.changePercent)})  today",
+                    "$arrow ${Money.format(abs(quote.change), quote.currency)}  (${percent(quote.changePercent)})  today",
                     style = MaterialTheme.typography.bodyMedium,
                     color = accent,
                     fontWeight = FontWeight.Medium
@@ -135,11 +146,17 @@ fun StockDetailScreen(
                 )
             ) {
                 Column(Modifier.padding(4.dp)) {
-                    StatRow("Open", money(quote.open))
-                    StatRow("Previous close", money(quote.previousClose))
-                    StatRow("Day high", money(quote.high))
-                    StatRow("Day low", money(quote.low))
-                    StatRow("Change", "${money(quote.change)} (${percent(quote.changePercent)})", accent)
+                    StatRow("Open", Money.format(quote.open, quote.currency))
+                    StatRow("Previous close", Money.format(quote.previousClose, quote.currency))
+                    StatRow("Day high", Money.format(quote.high, quote.currency))
+                    StatRow("Day low", Money.format(quote.low, quote.currency))
+                    StatRow(
+                        "Change",
+                        "${Money.format(quote.change, quote.currency)} (${percent(quote.changePercent)})",
+                        accent
+                    )
+                    if (quote.exchange.isNotBlank()) StatRow("Exchange", quote.exchange)
+                    if (quote.currency.isNotBlank()) StatRow("Currency", quote.currency.uppercase())
                     if (quote.updatedAt > 0L) {
                         StatRow("Last updated", timeText(quote.updatedAt))
                     }
@@ -175,7 +192,6 @@ private fun StatRow(label: String, value: String, valueColor: androidx.compose.u
     }
 }
 
-private fun money(v: Float): String = "$" + String.format("%,.2f", v)
 private fun percent(v: Float): String = String.format("%+.2f%%", v)
 private fun timeText(ts: Long): String =
     SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(Date(ts))

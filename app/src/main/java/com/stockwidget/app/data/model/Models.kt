@@ -33,6 +33,8 @@ data class StockQuote(
     val updatedAt: Long = 0L,
     val history: List<PricePoint> = emptyList(),
     val pinned: Boolean = false,
+    val currency: String = "",
+    val exchange: String = "",
     val error: String? = null
 ) {
     /** Change vs. the day's opening price. */
@@ -67,7 +69,9 @@ data class QuoteSnapshot(
     val previousClose: Float = 0f,
     val high: Float = 0f,
     val low: Float = 0f,
-    val updatedAt: Long = 0L
+    val updatedAt: Long = 0L,
+    val currency: String = "",
+    val exchange: String = ""
 )
 
 /** A symbol-search result shown when the user is adding a stock. */

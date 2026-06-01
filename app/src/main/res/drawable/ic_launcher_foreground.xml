@@ -1,33 +1,14 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-
-    <!-- Gradient fill under the line, like the stock-page sparkline. -->
-    <path android:pathData="M16,66 L38,53 L54,59 L72,42 L92,33 L92,90 L16,90 Z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:type="linear"
-                android:startX="54" android:startY="33"
-                android:endX="54" android:endY="90"
-                android:startColor="#702ECC71"
-                android:endColor="#002ECC71" />
-        </aapt:attr>
-    </path>
-
-    <!-- Green line trending up, spanning wide left-to-right. -->
+    <!-- A jagged stock line chart trending up, spanning side to side. Line only. -->
     <path
         android:strokeColor="#2ECC71"
-        android:strokeWidth="7"
+        android:strokeWidth="6"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M16,66 L38,53 L54,59 L72,42 L92,33" />
-
-    <!-- End point at the top-right. -->
-    <path
-        android:fillColor="#2ECC71"
-        android:pathData="M92,33 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+        android:pathData="M14,68 L24,62 L32,66 L40,55 L46,61 L52,49 L58,57 L66,51 L72,43 L78,53 L84,46 L92,35" />
 </vector>

@@ -29,6 +29,7 @@ class StockRepository(
      * series, and returns the view models. One bad ticker won't blank the others.
      */
     suspend fun refreshAll(): List<StockQuote> = withContext(Dispatchers.IO) {
+        store.lastRefreshAt = System.currentTimeMillis()
         store.getStocks().map { stock ->
             try {
                 val response = api.getChart(stock.symbol, "1d", "5m")

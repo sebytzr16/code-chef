@@ -11,6 +11,8 @@
     <string name="widget_description">Track your stocks with live prices and a green/red chart.</string>
     <string name="widget_single_description">A single stock with its price and green/red chart.</string>
     <string name="widget_single_tap_configure">Tap to pick a stock</string>
+    <string name="widget_two_description">Two stocks with prices and green/red charts.</string>
+    <string name="widget_two_tap_configure">Tap to pick two stocks</string>
     <string name="refresh">Refresh</string>
 
     <!-- Row -->

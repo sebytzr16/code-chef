@@ -95,7 +95,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 )
                 views.setImageViewBitmap(
                     R.id.single_chart,
-                    ChartBitmap.render(quote, widthDp = 96, heightDp = 48)
+                    ChartBitmap.render(quote, widthDp = 54, heightDp = 34)
                 )
                 views.setViewVisibility(R.id.single_chart, View.VISIBLE)
             } else {

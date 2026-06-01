@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="12dp">
+    android:padding="10dp">
 
-    <!-- Data content -->
+    <!-- Data content: text on the left, chart on the right -->
     <LinearLayout
         android:id="@+id/single_content"
         android:layout_width="match_parent"
@@ -15,52 +15,48 @@
         android:gravity="center_vertical"
         android:baselineAligned="false">
 
-        <!-- Name + price side by side (centered vertically), open/close below -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_vertical">
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/single_symbol"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="AAPL"
+                android:textColor="@color/widget_text_primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:id="@+id/single_symbol"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:maxLines="1"
-                    android:ellipsize="end"
-                    android:text="AAPL"
-                    android:textColor="@color/widget_text_primary"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+                android:gravity="bottom">
 
                 <TextView
                     android:id="@+id/single_price"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
                     android:maxLines="1"
                     android:text="$0.00"
                     android:textColor="@color/widget_text_primary"
-                    android:textSize="18sp"
+                    android:textSize="17sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/single_currency"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginBottom="2dp"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginBottom="1dp"
                     android:text="USD"
                     android:textColor="@color/widget_text_secondary"
-                    android:textSize="10sp" />
+                    android:textSize="9sp" />
             </LinearLayout>
 
             <TextView
@@ -69,18 +65,17 @@
                 android:layout_height="wrap_content"
                 android:maxLines="1"
                 android:ellipsize="end"
-                android:paddingTop="2dp"
                 android:text="O $0.00 · C $0.00"
                 android:textColor="@color/widget_text_secondary"
-                android:textSize="11sp" />
+                android:textSize="9sp" />
         </LinearLayout>
 
         <!-- Line chart only, on the side -->
         <ImageView
             android:id="@+id/single_chart"
-            android:layout_width="96dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="10dp"
+            android:layout_width="54dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="6dp"
             android:contentDescription="@null"
             android:scaleType="fitXY" />
     </LinearLayout>
@@ -94,6 +89,6 @@
         android:visibility="gone"
         android:text="@string/widget_single_tap_configure"
         android:textColor="@color/widget_text_secondary"
-        android:textSize="12sp" />
+        android:textSize="11sp" />
 
 </FrameLayout>

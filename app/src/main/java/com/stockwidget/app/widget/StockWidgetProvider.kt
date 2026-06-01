@@ -119,15 +119,13 @@ class StockWidgetProvider : AppWidgetProvider() {
         }
 
         private fun lastUpdatedText(context: Context): String {
-            val store = PreferencesStore(context)
-            val stocks = store.getStocks()
-            val latest = stocks
-                .mapNotNull { store.getHistory(it.symbol).lastOrNull()?.timestamp }
-                .maxOrNull()
-            return if (latest == null) {
+            // Wall-clock time of the last refresh, so it changes on every update
+            // (the market-data timestamp can stay fixed when the market is closed).
+            val last = PreferencesStore(context).lastRefreshAt
+            return if (last <= 0L) {
                 context.getString(R.string.widget_subtitle)
             } else {
-                val time = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(latest))
+                val time = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(last))
                 context.getString(R.string.widget_updated_at, time)
             }
         }

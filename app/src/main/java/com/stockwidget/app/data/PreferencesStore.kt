@@ -30,6 +30,11 @@ class PreferencesStore(context: Context) {
             .getOrDefault(ThemeMode.SYSTEM)
         set(value) = prefs.edit().putString(KEY_THEME, value.name).apply()
 
+    /** Wall-clock time (millis) of the last refresh attempt — what the widget shows. */
+    var lastRefreshAt: Long
+        get() = prefs.getLong(KEY_LAST_REFRESH, 0L)
+        set(value) = prefs.edit().putLong(KEY_LAST_REFRESH, value).apply()
+
     fun getStocks(): List<Stock> {
         val json = prefs.getString(KEY_STOCKS, null) ?: return emptyList()
         return runCatching {
@@ -159,14 +164,45 @@ class PreferencesStore(context: Context) {
         saveWidgetSymbolMap(map)
     }
 
+    // ---- Multi-stock widgets (e.g. the 2-stock 2x2): symbols per widget ------
+
+    private fun getWidgetSymbolsMap(): Map<String, List<String>> {
+        val json = prefs.getString(KEY_WIDGET_SYMBOLS_MULTI, null) ?: return emptyMap()
+        return runCatching {
+            val type = object : TypeToken<Map<String, List<String>>>() {}.type
+            gson.fromJson<Map<String, List<String>>>(json, type) ?: emptyMap()
+        }.getOrDefault(emptyMap())
+    }
+
+    private fun saveWidgetSymbolsMap(map: Map<String, List<String>>) {
+        prefs.edit().putString(KEY_WIDGET_SYMBOLS_MULTI, gson.toJson(map)).apply()
+    }
+
+    fun getWidgetSymbols(widgetId: Int): List<String> =
+        getWidgetSymbolsMap()[widgetId.toString()].orEmpty()
+
+    fun setWidgetSymbols(widgetId: Int, symbols: List<String>) {
+        val map = getWidgetSymbolsMap().toMutableMap()
+        map[widgetId.toString()] = symbols.map { it.uppercase() }
+        saveWidgetSymbolsMap(map)
+    }
+
+    fun removeWidgetSymbols(widgetId: Int) {
+        val map = getWidgetSymbolsMap().toMutableMap()
+        map.remove(widgetId.toString())
+        saveWidgetSymbolsMap(map)
+    }
+
     companion object {
         private const val PREFS_NAME = "stock_widget_prefs"
         private const val KEY_STOCKS = "stocks"
         private const val KEY_HISTORY = "history"
         private const val KEY_SNAPSHOTS = "snapshots"
         private const val KEY_WIDGET_SYMBOLS = "widget_symbols"
+        private const val KEY_WIDGET_SYMBOLS_MULTI = "widget_symbols_multi"
         private const val KEY_REFRESH = "refresh_minutes"
         private const val KEY_THEME = "theme_mode"
+        private const val KEY_LAST_REFRESH = "last_refresh_at"
         private const val DEFAULT_REFRESH_MIN = 30
         private const val MAX_POINTS = 120
     }

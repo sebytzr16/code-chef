@@ -65,6 +65,28 @@
             </intent-filter>
         </activity>
 
+        <!-- Two-stock 2x2 widget + its placement-time configuration screen -->
+        <receiver
+            android:name=".widget.TwoStockWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.stockwidget.app.ACTION_REFRESH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/two_widget_info" />
+        </receiver>
+
+        <activity
+            android:name=".widget.TwoStockConfigActivity"
+            android:exported="false"
+            android:theme="@style/Theme.StockWidget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>

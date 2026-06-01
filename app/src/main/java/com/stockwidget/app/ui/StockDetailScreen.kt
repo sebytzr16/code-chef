@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,11 +27,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.stockwidget.app.data.model.PricePoint
 import com.stockwidget.app.data.model.StockQuote
 import com.stockwidget.app.ui.theme.PriceDown
 import com.stockwidget.app.ui.theme.PriceUp
@@ -55,9 +60,16 @@ fun StockDetailScreen(
         ?: cached
         ?: StockQuote(symbol = symbol, displayName = symbol)
 
-    val up = quote.isUp
-    val accent = if (up) PriceUp else PriceDown
     val hasData = quote.hasData || quote.history.isNotEmpty()
+
+    // The point currently being scrubbed on the chart (null when not touching it).
+    var scrubbed by remember(symbol) { mutableStateOf<PricePoint?>(null) }
+    val shownPrice = scrubbed?.price ?: quote.current
+    val shownChange = shownPrice - quote.open
+    val shownPct = if (quote.open != 0f) shownChange / quote.open * 100f else 0f
+    val up = shownPrice >= quote.open
+    val accent = if (up) PriceUp else PriceDown
+    val dayAccent = if (quote.isUp) PriceUp else PriceDown
 
     Scaffold(
         topBar = {
@@ -66,6 +78,11 @@ fun StockDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -89,7 +106,7 @@ fun StockDetailScreen(
             Spacer(Modifier.height(8.dp))
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    if (hasData) Money.format(quote.current, quote.currency) else "—",
+                    if (hasData) Money.format(shownPrice, quote.currency) else "—",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -104,8 +121,9 @@ fun StockDetailScreen(
             }
             if (hasData) {
                 val arrow = if (up) "▲" else "▼"
+                val suffix = if (scrubbed == null) "  today" else ""
                 Text(
-                    "$arrow ${Money.format(abs(quote.change), quote.currency)}  (${percent(quote.changePercent)})  today",
+                    "$arrow ${Money.format(abs(shownChange), quote.currency)}  (${percent(shownPct)})$suffix",
                     style = MaterialTheme.typography.bodyMedium,
                     color = accent,
                     fontWeight = FontWeight.Medium
@@ -120,21 +138,39 @@ fun StockDetailScreen(
 
             Spacer(Modifier.height(20.dp))
 
-            // Large chart.
+            // Large interactive chart — drag across it to inspect prices through the day.
             Card(
                 Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                 )
             ) {
-                Sparkline(
+                InteractiveChart(
                     quote = quote,
+                    onScrub = { scrubbed = it },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(180.dp)
                         .padding(16.dp)
                 )
             }
+
+            Spacer(Modifier.height(10.dp))
+
+            // Detached time-of-day label that tracks the scrubbed point.
+            Text(
+                text = when {
+                    !hasData -> ""
+                    scrubbed != null -> timeOfDay(scrubbed!!.timestamp)
+                    else -> "Swipe the chart to see prices through the day"
+                },
+                style = MaterialTheme.typography.labelLarge,
+                color = if (scrubbed != null) MaterialTheme.colorScheme.onSurface
+                else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = if (scrubbed != null) FontWeight.SemiBold else FontWeight.Normal,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(Modifier.height(20.dp))
 
@@ -153,7 +189,7 @@ fun StockDetailScreen(
                     StatRow(
                         "Change",
                         "${Money.format(quote.change, quote.currency)} (${percent(quote.changePercent)})",
-                        accent
+                        dayAccent
                     )
                     if (quote.exchange.isNotBlank()) StatRow("Exchange", quote.exchange)
                     if (quote.currency.isNotBlank()) StatRow("Currency", quote.currency.uppercase())
@@ -195,3 +231,5 @@ private fun StatRow(label: String, value: String, valueColor: androidx.compose.u
 private fun percent(v: Float): String = String.format("%+.2f%%", v)
 private fun timeText(ts: Long): String =
     SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(Date(ts))
+private fun timeOfDay(ts: Long): String =
+    SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(ts))

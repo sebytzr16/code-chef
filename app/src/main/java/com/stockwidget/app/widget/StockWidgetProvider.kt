@@ -3,7 +3,6 @@ package com.stockwidget.app.widget
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -84,9 +83,6 @@ class StockWidgetProvider : AppWidgetProvider() {
             // Title taps also open the app.
             views.setOnClickPendingIntent(R.id.widget_title, openPending)
 
-            // Refresh button.
-            views.setOnClickPendingIntent(R.id.widget_refresh, refreshPendingIntent(context))
-
             manager.updateAppWidget(widgetId, views)
             manager.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_list)
         }
@@ -96,7 +92,6 @@ class StockWidgetProvider : AppWidgetProvider() {
             ids.forEach { id ->
                 val views = RemoteViews(context.packageName, R.layout.widget_stock)
                 views.setTextViewText(R.id.widget_updated, lastUpdatedText(context))
-                views.setOnClickPendingIntent(R.id.widget_refresh, refreshPendingIntent(context))
                 manager.partiallyUpdateAppWidget(id, views)
             }
         }
@@ -105,17 +100,6 @@ class StockWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_stock)
             views.setTextViewText(R.id.widget_updated, context.getString(R.string.widget_updating))
             manager.partiallyUpdateAppWidget(id, views)
-        }
-
-        private fun refreshPendingIntent(context: Context): PendingIntent {
-            val intent = Intent(context, StockWidgetProvider::class.java).apply {
-                action = ACTION_REFRESH
-                component = ComponentName(context, StockWidgetProvider::class.java)
-            }
-            return PendingIntent.getBroadcast(
-                context, 1, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
         }
 
         private fun lastUpdatedText(context: Context): String {

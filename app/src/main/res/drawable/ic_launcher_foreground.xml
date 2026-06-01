@@ -3,12 +3,21 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Volatile stock line in the style of the reference, running edge to edge. -->
+    <!-- Upward trending line chart. -->
     <path
         android:strokeColor="#2ECC71"
-        android:strokeWidth="4"
+        android:strokeWidth="5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M0,60 L12,54 L20,60 L28,55 L36,63 L44,57 L52,67 L60,45 L66,53 L72,47 L80,58 L86,50 L94,59 L108,44" />
+        android:pathData="M34,68 L46,58 L56,64 L74,42" />
+    <path
+        android:fillColor="#2ECC71"
+        android:pathData="M74,42 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <path
+        android:strokeColor="#552ECC71"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M34,76 L74,76" />
 </vector>

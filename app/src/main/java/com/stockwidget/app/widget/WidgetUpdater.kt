@@ -21,8 +21,9 @@ object WidgetUpdater {
             // Also rebuild the chrome (header / timestamp).
             StockWidgetProvider.refreshChrome(context, manager, ids)
         }
-        // Single-stock widgets are static layouts; redraw them directly.
+        // Single- and two-stock widgets are static layouts; redraw them directly.
         SingleStockWidgetProvider.renderAll(context)
+        TwoStockWidgetProvider.renderAll(context)
     }
 
     /** Fetch fresh quotes off the main thread, then redraw. */

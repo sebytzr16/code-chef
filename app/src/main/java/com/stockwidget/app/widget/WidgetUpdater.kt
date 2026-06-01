@@ -18,8 +18,6 @@ object WidgetUpdater {
         val ids = widgetIds(context, manager)
         if (ids.isNotEmpty()) {
             manager.notifyAppWidgetViewDataChanged(ids, R.id.widget_list)
-            // Also rebuild the chrome (header / timestamp).
-            StockWidgetProvider.refreshChrome(context, manager, ids)
         }
         // Single- and two-stock widgets are static layouts; redraw them directly.
         SingleStockWidgetProvider.renderAll(context)

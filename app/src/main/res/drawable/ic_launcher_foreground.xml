@@ -3,12 +3,12 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Thin, volatile stock line trending up. Starts mid-left, ends top-right. Line only. -->
+    <!-- Volatile stock line in the style of the reference, running edge to edge. -->
     <path
         android:strokeColor="#2ECC71"
         android:strokeWidth="4"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M20,55 L27,46 L33,57 L40,42 L46,53 L52,38 L58,50 L65,43 L71,33 L77,47 L83,35 L88,27" />
+        android:pathData="M0,60 L12,54 L20,60 L28,55 L36,63 L44,57 L52,67 L60,45 L66,53 L72,47 L80,58 L86,50 L94,59 L108,44" />
 </vector>

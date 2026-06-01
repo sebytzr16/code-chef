@@ -10,13 +10,10 @@ import android.widget.RemoteViews
 import com.stockwidget.app.MainActivity
 import com.stockwidget.app.R
 import com.stockwidget.app.data.PreferencesStore
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
- * Home-screen widget: a header (title, last-updated, refresh) plus a scrollable list of
- * tracked stocks fed by [StockWidgetService].
+ * Home-screen widget: a title header plus a scrollable list of tracked stocks fed by
+ * [StockWidgetService]. Tapping a row opens that stock's detail screen.
  */
 class StockWidgetProvider : AppWidgetProvider() {
 
@@ -28,17 +25,6 @@ class StockWidgetProvider : AppWidgetProvider() {
         appWidgetIds.forEach { id -> buildWidget(context, appWidgetManager, id) }
         // Pull fresh data whenever the system asks us to update.
         WidgetUpdater.refreshData(context)
-    }
-
-    override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == ACTION_REFRESH) {
-            // Show a spinner-ish "Updating…" state, then fetch + redraw.
-            val manager = AppWidgetManager.getInstance(context)
-            val ids = WidgetUpdater.widgetIds(context, manager)
-            ids.forEach { setUpdating(context, manager, it) }
-            WidgetUpdater.refreshData(context)
-        }
     }
 
     companion object {
@@ -69,49 +55,29 @@ class StockWidgetProvider : AppWidgetProvider() {
             }
             views.setTextViewText(R.id.widget_empty, emptyText)
 
-            // Header timestamp.
-            views.setTextViewText(R.id.widget_updated, lastUpdatedText(context))
+            // Template for row taps. MUTABLE so each row's fill-in intent (carrying the
+            // symbol) is applied; opens the tapped stock's detail screen.
+            val template = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val templatePending = PendingIntent.getActivity(
+                context, 0, template,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            )
+            views.setPendingIntentTemplate(R.id.widget_list, templatePending)
 
-            // Tapping a row opens the app (template + per-item fill-in intent).
-            val openApp = Intent(context, MainActivity::class.java)
-            val openPending = PendingIntent.getActivity(
-                context, 0, openApp,
+            // Title taps open the app (home).
+            val openHome = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val homePending = PendingIntent.getActivity(
+                context, 1, openHome,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            views.setPendingIntentTemplate(R.id.widget_list, openPending)
-
-            // Title taps also open the app.
-            views.setOnClickPendingIntent(R.id.widget_title, openPending)
+            views.setOnClickPendingIntent(R.id.widget_title, homePending)
 
             manager.updateAppWidget(widgetId, views)
             manager.notifyAppWidgetViewDataChanged(widgetId, R.id.widget_list)
-        }
-
-        /** Re-render only the header/chrome (used after a data refresh completes). */
-        fun refreshChrome(context: Context, manager: AppWidgetManager, ids: IntArray) {
-            ids.forEach { id ->
-                val views = RemoteViews(context.packageName, R.layout.widget_stock)
-                views.setTextViewText(R.id.widget_updated, lastUpdatedText(context))
-                manager.partiallyUpdateAppWidget(id, views)
-            }
-        }
-
-        private fun setUpdating(context: Context, manager: AppWidgetManager, id: Int) {
-            val views = RemoteViews(context.packageName, R.layout.widget_stock)
-            views.setTextViewText(R.id.widget_updated, context.getString(R.string.widget_updating))
-            manager.partiallyUpdateAppWidget(id, views)
-        }
-
-        private fun lastUpdatedText(context: Context): String {
-            // Wall-clock time of the last refresh, so it changes on every update
-            // (the market-data timestamp can stay fixed when the market is closed).
-            val last = PreferencesStore(context).lastRefreshAt
-            return if (last <= 0L) {
-                context.getString(R.string.widget_subtitle)
-            } else {
-                val time = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(last))
-                context.getString(R.string.widget_updated_at, time)
-            }
         }
     }
 }

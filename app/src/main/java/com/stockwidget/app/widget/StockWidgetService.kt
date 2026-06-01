@@ -2,9 +2,11 @@ package com.stockwidget.app.widget
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
+import com.stockwidget.app.MainActivity
 import com.stockwidget.app.R
 import com.stockwidget.app.data.StockRepository
 import com.stockwidget.app.data.model.StockQuote
@@ -69,8 +71,12 @@ private class StockRemoteViewsFactory(
             views.setViewVisibility(R.id.row_chart, View.INVISIBLE)
         }
 
-        // Per-row tap fills in the template intent set by the provider.
-        val fillIn = Intent().putExtra("symbol", q.symbol)
+        // Per-row tap fills in the template intent so it opens this stock's detail.
+        val fillIn = Intent().apply {
+            putExtra(MainActivity.EXTRA_OPEN_SYMBOL, q.symbol)
+            // Unique data so each row's fill-in is treated as distinct.
+            data = Uri.parse("stockwidget://open/${q.symbol}")
+        }
         views.setOnClickFillInIntent(R.id.row_root, fillIn)
 
         return views

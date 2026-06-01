@@ -3,21 +3,17 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Upward trending line chart, drawn within the adaptive-icon safe zone. -->
+    <!-- Green line chart trending up from left to right.
+         Kept within the adaptive-icon safe zone (centre circle) so masks don't clip it. -->
     <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
+        android:strokeColor="#2ECC71"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M34,68 L46,58 L56,64 L74,42" />
+        android:pathData="M33,69 L49,56 L61,62 L75,43" />
+    <!-- End point at the top-right. -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M74,42 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
-    <path
-        android:strokeColor="#80FFFFFF"
-        android:strokeWidth="3"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000"
-        android:pathData="M34,76 L74,76" />
+        android:fillColor="#2ECC71"
+        android:pathData="M75,43 m-5.5,0 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0" />
 </vector>

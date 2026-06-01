@@ -15,5 +15,5 @@
     <color name="price_down">#FFEF5350</color>
 
     <!-- Launcher icon -->
-    <color name="ic_launcher_background">#1B6B70</color>
+    <color name="ic_launcher_background">#000000</color>
 </resources>

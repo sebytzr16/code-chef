@@ -3,7 +3,7 @@
 
     <!-- Widget -->
     <string name="widget_title">Stocks</string>
-    <string name="widget_subtitle">Tap refresh to update</string>
+    <string name="widget_subtitle">Auto-updating</string>
     <string name="widget_updating">Updating…</string>
     <string name="widget_updated_at">Updated %1$s</string>
     <string name="widget_loading">Loading prices…</string>

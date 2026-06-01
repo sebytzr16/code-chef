@@ -135,7 +135,7 @@ class TwoStockWidgetProvider : AppWidgetProvider() {
                         Money.format(quote.previousClose, quote.currency)
                     )
                 )
-                views.setImageViewBitmap(ids.chart, ChartBitmap.render(quote, widthDp = 88, heightDp = 44))
+                views.setImageViewBitmap(ids.chart, ChartBitmap.render(quote, widthDp = 116, heightDp = 54))
                 views.setViewVisibility(ids.chart, View.VISIBLE)
             } else {
                 views.setTextViewText(ids.price, "—")

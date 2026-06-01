@@ -4,9 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
-    android:padding="10dp">
+    android:padding="12dp">
 
-    <!-- Data content: text on the left, chart on the right -->
+    <!-- Data content: text on the left, chart + refresh on the right -->
     <LinearLayout
         android:id="@+id/single_content"
         android:layout_width="match_parent"
@@ -29,7 +29,7 @@
                 android:ellipsize="end"
                 android:text="AAPL"
                 android:textColor="@color/widget_text_primary"
-                android:textSize="13sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -45,18 +45,18 @@
                     android:maxLines="1"
                     android:text="$0.00"
                     android:textColor="@color/widget_text_primary"
-                    android:textSize="17sp"
+                    android:textSize="20sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/single_currency"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="3dp"
-                    android:layout_marginBottom="1dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp"
                     android:text="USD"
                     android:textColor="@color/widget_text_secondary"
-                    android:textSize="9sp" />
+                    android:textSize="10sp" />
             </LinearLayout>
 
             <TextView
@@ -67,17 +67,27 @@
                 android:ellipsize="end"
                 android:text="O $0.00 · C $0.00"
                 android:textColor="@color/widget_text_secondary"
-                android:textSize="9sp" />
+                android:textSize="10sp" />
         </LinearLayout>
 
-        <!-- Line chart only, on the side -->
+        <!-- Line chart -->
         <ImageView
             android:id="@+id/single_chart"
-            android:layout_width="54dp"
-            android:layout_height="34dp"
-            android:layout_marginStart="6dp"
+            android:layout_width="80dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="8dp"
             android:contentDescription="@null"
             android:scaleType="fitXY" />
+
+        <!-- Refresh -->
+        <ImageView
+            android:id="@+id/single_refresh"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="4dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_refresh"
+            android:contentDescription="@string/refresh" />
     </LinearLayout>
 
     <!-- Empty / not-configured state -->
@@ -89,6 +99,6 @@
         android:visibility="gone"
         android:text="@string/widget_single_tap_configure"
         android:textColor="@color/widget_text_secondary"
-        android:textSize="11sp" />
+        android:textSize="12sp" />
 
 </FrameLayout>

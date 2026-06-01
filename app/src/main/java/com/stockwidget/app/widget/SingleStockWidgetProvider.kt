@@ -58,6 +58,9 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
             val store = PreferencesStore(context)
             val symbol = store.getWidgetSymbol(widgetId)
 
+            // Refresh button (always wired).
+            views.setOnClickPendingIntent(R.id.single_refresh, refreshIntent(context))
+
             val repo = StockRepository(context)
             val quote = symbol?.let { repo.cachedQuote(it) }
 
@@ -95,7 +98,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 )
                 views.setImageViewBitmap(
                     R.id.single_chart,
-                    ChartBitmap.render(quote, widthDp = 54, heightDp = 34)
+                    ChartBitmap.render(quote, widthDp = 80, heightDp = 44)
                 )
                 views.setViewVisibility(R.id.single_chart, View.VISIBLE)
             } else {
@@ -133,5 +136,14 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
             )
         }
 
+        private fun refreshIntent(context: Context): PendingIntent {
+            val intent = Intent(context, SingleStockWidgetProvider::class.java).apply {
+                action = StockWidgetProvider.ACTION_REFRESH
+            }
+            return PendingIntent.getBroadcast(
+                context, 3, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        }
     }
 }

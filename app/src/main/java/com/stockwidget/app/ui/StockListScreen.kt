@@ -21,10 +21,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.AlertDialog
@@ -115,17 +116,16 @@ fun StockListScreen(
                     if (editMode) {
                         TextButton(onClick = { editMode = false }) { Text("Done") }
                     } else {
+                        IconButton(onClick = { viewModel.refresh() }) {
+                            Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
+                        }
                         IconButton(onClick = { menuOpen = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "Menu")
+                            Icon(Icons.Filled.Edit, contentDescription = "Menu")
                         }
                         DropdownMenu(
                             expanded = menuOpen,
                             onDismissRequest = { menuOpen = false }
                         ) {
-                            DropdownMenuItem(
-                                text = { Text("Refresh now") },
-                                onClick = { menuOpen = false; viewModel.refresh() }
-                            )
                             DropdownMenuItem(
                                 text = { Text("Edit stocks") },
                                 onClick = { menuOpen = false; editMode = true }

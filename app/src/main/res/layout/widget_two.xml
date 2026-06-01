@@ -86,9 +86,11 @@
                 android:scaleType="fitXY" />
         </LinearLayout>
 
-        <View
+        <!-- Divider: a LinearLayout (RemoteViews-supported) instead of a bare View. -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="1dp"
+            android:orientation="horizontal"
             android:background="@color/widget_divider" />
 
         <!-- Stock 2 -->

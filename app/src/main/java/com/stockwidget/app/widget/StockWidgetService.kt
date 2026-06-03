@@ -46,6 +46,11 @@ private class StockRemoteViewsFactory(
         views.setTextViewText(R.id.row_symbol, q.displaySymbol)
 
         if (q.hasData || q.history.isNotEmpty()) {
+            val arrow = if (q.isUp) "▲" else "▼"
+            views.setTextViewText(R.id.row_change, "$arrow ${Money.percentChange(q.changePercent)}")
+            views.setTextColor(R.id.row_change, if (q.isUp) ChartBitmap.GREEN else ChartBitmap.RED)
+            views.setViewVisibility(R.id.row_change, View.VISIBLE)
+
             views.setTextViewText(R.id.row_price, Money.format(q.current, q.currency))
             if (q.currency.isNotBlank()) {
                 views.setTextViewText(R.id.row_currency, q.currency.uppercase())
@@ -65,6 +70,7 @@ private class StockRemoteViewsFactory(
             views.setViewVisibility(R.id.row_chart, View.VISIBLE)
         } else {
             // No data yet (e.g. error or never fetched).
+            views.setViewVisibility(R.id.row_change, View.GONE)
             views.setTextViewText(R.id.row_price, "—")
             views.setViewVisibility(R.id.row_currency, View.GONE)
             views.setTextViewText(R.id.row_openclose, q.error ?: "")

@@ -43,4 +43,8 @@ object Money {
         val number = String.format(Locale.US, "%,.${decimals}f", amount)
         return symbol(currency) + number
     }
+
+    /** Absolute percent label, e.g. "1.23%" (the arrow/colour convey direction). */
+    fun percentChange(value: Float): String =
+        String.format(Locale.US, "%.2f%%", kotlin.math.abs(value))
 }

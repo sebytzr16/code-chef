@@ -78,6 +78,17 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.single_symbol, quote.displaySymbol)
 
             if (hasData) {
+                val arrow = if (quote.isUp) "▲" else "▼"
+                views.setTextViewText(
+                    R.id.single_change,
+                    "$arrow ${Money.percentChange(quote.changePercent)}"
+                )
+                views.setTextColor(
+                    R.id.single_change,
+                    if (quote.isUp) ChartBitmap.GREEN else ChartBitmap.RED
+                )
+                views.setViewVisibility(R.id.single_change, View.VISIBLE)
+
                 views.setTextViewText(R.id.single_price, Money.format(quote.current, quote.currency))
                 if (quote.currency.isNotBlank()) {
                     views.setTextViewText(R.id.single_currency, quote.currency.uppercase())
@@ -99,6 +110,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 )
                 views.setViewVisibility(R.id.single_chart, View.VISIBLE)
             } else {
+                views.setViewVisibility(R.id.single_change, View.GONE)
                 views.setTextViewText(R.id.single_price, "—")
                 views.setViewVisibility(R.id.single_currency, View.GONE)
                 views.setTextViewText(R.id.single_openclose, quote.error ?: "")

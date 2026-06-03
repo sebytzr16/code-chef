@@ -47,4 +47,10 @@ object Money {
     /** Absolute percent label, e.g. "1.23%" (the arrow/colour convey direction). */
     fun percentChange(value: Float): String =
         String.format(Locale.US, "%.2f%%", kotlin.math.abs(value))
+
+    /** Price with its currency code appended, e.g. "C$44.75 CAD" — for the widgets. */
+    fun priceLabel(amount: Float, currency: String): String {
+        val price = format(amount, currency)
+        return if (currency.isBlank()) price else "$price ${currency.uppercase(Locale.US)}"
+    }
 }

@@ -51,13 +51,7 @@ private class StockRemoteViewsFactory(
             views.setTextColor(R.id.row_change, if (q.isUp) ChartBitmap.GREEN else ChartBitmap.RED)
             views.setViewVisibility(R.id.row_change, View.VISIBLE)
 
-            views.setTextViewText(R.id.row_price, Money.format(q.current, q.currency))
-            if (q.currency.isNotBlank()) {
-                views.setTextViewText(R.id.row_currency, q.currency.uppercase())
-                views.setViewVisibility(R.id.row_currency, View.VISIBLE)
-            } else {
-                views.setViewVisibility(R.id.row_currency, View.GONE)
-            }
+            views.setTextViewText(R.id.row_price, Money.priceLabel(q.current, q.currency))
             views.setTextViewText(
                 R.id.row_openclose,
                 context.getString(
@@ -72,7 +66,6 @@ private class StockRemoteViewsFactory(
             // No data yet (e.g. error or never fetched).
             views.setViewVisibility(R.id.row_change, View.GONE)
             views.setTextViewText(R.id.row_price, "—")
-            views.setViewVisibility(R.id.row_currency, View.GONE)
             views.setTextViewText(R.id.row_openclose, q.error ?: "")
             views.setViewVisibility(R.id.row_chart, View.INVISIBLE)
         }

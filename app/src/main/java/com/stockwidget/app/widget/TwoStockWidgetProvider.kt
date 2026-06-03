@@ -47,7 +47,6 @@ class TwoStockWidgetProvider : AppWidgetProvider() {
         val symbol: Int,
         val change: Int,
         val price: Int,
-        val currency: Int,
         val openClose: Int,
         val chart: Int
     )
@@ -56,11 +55,11 @@ class TwoStockWidgetProvider : AppWidgetProvider() {
 
         private val BLOCK_1 = BlockIds(
             R.id.two_block1, R.id.two_symbol1, R.id.two_change1, R.id.two_price1,
-            R.id.two_currency1, R.id.two_openclose1, R.id.two_chart1
+            R.id.two_openclose1, R.id.two_chart1
         )
         private val BLOCK_2 = BlockIds(
             R.id.two_block2, R.id.two_symbol2, R.id.two_change2, R.id.two_price2,
-            R.id.two_currency2, R.id.two_openclose2, R.id.two_chart2
+            R.id.two_openclose2, R.id.two_chart2
         )
 
         fun renderAll(context: Context) {
@@ -126,13 +125,7 @@ class TwoStockWidgetProvider : AppWidgetProvider() {
                 views.setTextColor(ids.change, if (quote.isUp) ChartBitmap.GREEN else ChartBitmap.RED)
                 views.setViewVisibility(ids.change, View.VISIBLE)
 
-                views.setTextViewText(ids.price, Money.format(quote.current, quote.currency))
-                if (quote.currency.isNotBlank()) {
-                    views.setTextViewText(ids.currency, quote.currency.uppercase())
-                    views.setViewVisibility(ids.currency, View.VISIBLE)
-                } else {
-                    views.setViewVisibility(ids.currency, View.GONE)
-                }
+                views.setTextViewText(ids.price, Money.priceLabel(quote.current, quote.currency))
                 views.setTextViewText(
                     ids.openClose,
                     context.getString(
@@ -146,7 +139,6 @@ class TwoStockWidgetProvider : AppWidgetProvider() {
             } else {
                 views.setViewVisibility(ids.change, View.GONE)
                 views.setTextViewText(ids.price, "—")
-                views.setViewVisibility(ids.currency, View.GONE)
                 views.setTextViewText(ids.openClose, quote.error ?: "")
                 views.setViewVisibility(ids.chart, View.INVISIBLE)
             }

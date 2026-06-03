@@ -89,13 +89,7 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
                 )
                 views.setViewVisibility(R.id.single_change, View.VISIBLE)
 
-                views.setTextViewText(R.id.single_price, Money.format(quote.current, quote.currency))
-                if (quote.currency.isNotBlank()) {
-                    views.setTextViewText(R.id.single_currency, quote.currency.uppercase())
-                    views.setViewVisibility(R.id.single_currency, View.VISIBLE)
-                } else {
-                    views.setViewVisibility(R.id.single_currency, View.GONE)
-                }
+                views.setTextViewText(R.id.single_price, Money.priceLabel(quote.current, quote.currency))
                 views.setTextViewText(
                     R.id.single_openclose,
                     context.getString(
@@ -112,7 +106,6 @@ class SingleStockWidgetProvider : AppWidgetProvider() {
             } else {
                 views.setViewVisibility(R.id.single_change, View.GONE)
                 views.setTextViewText(R.id.single_price, "—")
-                views.setViewVisibility(R.id.single_currency, View.GONE)
                 views.setTextViewText(R.id.single_openclose, quote.error ?: "")
                 views.setViewVisibility(R.id.single_chart, View.INVISIBLE)
             }

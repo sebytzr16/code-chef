@@ -20,6 +20,7 @@ data class UiState(
     val isLoading: Boolean = false,
     val refreshMinutes: Int = 30,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val lastRefreshAt: Long = 0L,
     val message: String? = null
 )
 
@@ -35,7 +36,8 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value.copy(
             quotes = repository.cachedQuotes(),
             refreshMinutes = repository.preferences.refreshMinutes,
-            themeMode = repository.preferences.themeMode
+            themeMode = repository.preferences.themeMode,
+            lastRefreshAt = repository.preferences.lastRefreshAt
         )
         refresh()
     }
@@ -48,7 +50,11 @@ class StockViewModel(app: Application) : AndroidViewModel(app) {
         _state.value = _state.value.copy(isLoading = true)
         viewModelScope.launch {
             val quotes = repository.refreshAll()
-            _state.value = _state.value.copy(quotes = quotes, isLoading = false)
+            _state.value = _state.value.copy(
+                quotes = quotes,
+                isLoading = false,
+                lastRefreshAt = repository.preferences.lastRefreshAt
+            )
             WidgetUpdater.notifyDataChanged(getApplication())
         }
     }

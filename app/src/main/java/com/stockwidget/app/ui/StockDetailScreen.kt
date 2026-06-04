@@ -193,8 +193,8 @@ fun StockDetailScreen(
                     )
                     if (quote.exchange.isNotBlank()) StatRow("Exchange", quote.exchange)
                     if (quote.currency.isNotBlank()) StatRow("Currency", quote.currency.uppercase())
-                    if (quote.updatedAt > 0L) {
-                        StatRow("Last updated", timeText(quote.updatedAt))
+                    if (state.lastRefreshAt > 0L) {
+                        StatRow("Last updated", timeText(state.lastRefreshAt))
                     }
                 }
             }
